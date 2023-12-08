@@ -18,6 +18,9 @@ create table messages (
   "to" text[],
   cc text[]
 );
+create index idx_messages_ts on messages(ts);
+create index idx_messages_in_reply_to on messages(in_reply_to);
+create index idx_messages_lists on messages using gin(lists);
 
 create table error_messages (
   id text primary key
