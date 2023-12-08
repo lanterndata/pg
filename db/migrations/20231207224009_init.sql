@@ -13,8 +13,8 @@ create table messages (
   in_reply_to text references messages(id),
   ts timestamptz,
   subject text,
-  from text,
-  to text[],
+  "from" text,
+  "to" text[],
   cc text[]
 );
 
