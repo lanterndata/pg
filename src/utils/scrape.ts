@@ -1,6 +1,8 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { getListAndDateTuples } from './constants';
+import db from '@/clients/db';
+import _ from 'lodash';
 
 // Sample URL: https://www.postgresql.org/list/pgsql-admin/2023-12/
 async function fetchMessageUrls(list: string, date: string) {
@@ -34,6 +36,8 @@ async function fetchMessage(id: string) {
 
   const subject = $('tr th:contains("Subject:") + td').text().trim();
 
+  const body = $('.message-content').html()?.trim();
+
   const ts = $('tr th:contains("Date:") + td').text().trim();
 
   const from = $('tr th:contains("From:") + td').text().trim();
@@ -57,6 +61,7 @@ async function fetchMessage(id: string) {
     lists,
     to,
     subject,
+    body,
     ts,
     from,
     cc,
@@ -66,6 +71,59 @@ async function fetchMessage(id: string) {
 
 export async function scrapeMessages() {
   const listAndDateTuples = getListAndDateTuples();
-  // Check database to see if we have already scraped this list/date combination
-  return;
+  const seenListAndDateTuples = await db
+    .selectFrom('scrapeLogs')
+    .select(['list', 'date'])
+    .execute();
+  const unseenListAndDateTuples = listAndDateTuples.filter(
+    (t1) => !seenListAndDateTuples.some((t2) => _.isEqual(t1, t2))
+  );
+
+  for (const tuple of unseenListAndDateTuples) {
+    const { list, date } = tuple;
+    const slug = `${list}/${date}`;
+
+    try {
+      const messageIds = await fetchMessageUrls(list, date);
+      const total = messageIds.length;
+      let inserted = 0;
+      let skipped = 0;
+      let errors = 0;
+
+      console.log(`Scraping ${total} messages from ${slug}`);
+      for (const messageId of messageIds) {
+        try {
+          const existingMessage = await db
+            .selectFrom('messages')
+            .where('id', '=', messageId)
+            .executeTakeFirst();
+          if (!existingMessage) {
+            const message = await fetchMessage(messageId);
+            await db.insertInto('messages').values(message).execute();
+            console.log(`Scraped message ${messageId}`);
+            inserted += 1;
+          } else {
+            console.log(`Skipping message ${messageId}`);
+            skipped += 1;
+          }
+        } catch (error) {
+          await db
+            .insertInto('errorMessages')
+            .values({ id: messageId })
+            .execute();
+          errors += 1;
+          console.log(`Error scraping message ${messageId}: ${error}`);
+        }
+      }
+
+      await db.insertInto('scrapeLogs').values(tuple).execute();
+
+      console.log(
+        `Scraped ${inserted} messages from ${slug} (${skipped} skipped, ${errors} errors)`
+      );
+      console.log();
+    } catch (error) {
+      console.log(`Error scraping ${slug}: ${error}`);
+    }
+  }
 }

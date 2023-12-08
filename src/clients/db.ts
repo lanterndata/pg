@@ -1,5 +1,5 @@
 import { CamelCasePlugin, Kysely, PostgresDialect } from 'kysely';
-import { DB } from 'kysely-codegen';
+import { DB } from './db-types';
 import { Pool } from 'pg';
 
 const db = new Kysely<DB>({

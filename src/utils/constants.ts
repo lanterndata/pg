@@ -2,7 +2,7 @@
 // Dates
 // ----------------------------------------------------
 
-const EARLEST_YEAR = 2020;
+const EARLEST_YEAR = 2023;
 const CURRENT_YEAR = new Date().getFullYear();
 const CURRENT_MONTH = new Date().getMonth() + 1;
 
@@ -21,7 +21,7 @@ const getDates = () => {
 // Lists
 // ----------------------------------------
 
-export const FORMATTED_LISTS = [
+export const CATEGORY_LISTS = [
   {
     category: 'user',
     lists: [
@@ -165,7 +165,7 @@ export const FORMATTED_LISTS = [
   },
 ];
 
-export const LISTS = FORMATTED_LISTS.flatMap((category) =>
+export const LISTS = CATEGORY_LISTS.flatMap((category) =>
   category.lists.map((list) => list.list)
 );
 

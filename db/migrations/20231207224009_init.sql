@@ -10,12 +10,17 @@ create table scrape_logs (
 create table messages (
   id text primary key,
   lists text[],
-  in_reply_to text references messages(id),
+  in_reply_to text,
   ts timestamptz,
   subject text,
+  body text,
   "from" text,
   "to" text[],
   cc text[]
+);
+
+create table error_messages (
+  id text primary key
 );
 
 -- migrate:down
