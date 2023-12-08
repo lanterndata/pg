@@ -23,7 +23,32 @@ create table error_messages (
   id text primary key
 );
 
+create recursive view threads (
+  thread_id,
+  message_id
+) as (
+  -- Base case: messages without a parent (in_reply_to is NULL)
+  select
+    id,
+    id
+  from
+    messages
+  where
+    in_reply_to is null
+
+  union all
+
+  -- Recursive case: messages that are replies to other messages
+  select
+    t.thread_id,
+    m.id
+  from messages m
+  join threads t
+  on m.in_reply_to = t.message_id
+);
+
 -- migrate:down
 
 drop table scrape_logs;
 drop table messages;
+drop view threads;
