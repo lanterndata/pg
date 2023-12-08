@@ -35,6 +35,8 @@ export async function getThreads(list: string) {
   return threads.map((thread) => ({
     ...thread,
     from: parseNameFromString(thread.from),
-    count: counts.find((count) => count.threadId === thread.id)?.count || 1,
+    count:
+      (counts.find((count) => count.threadId === thread.id)?.count as number) ||
+      1,
   }));
 }
