@@ -1,4 +1,27 @@
-export const LISTS = [
+// ----------------------------------------------------
+// Dates
+// ----------------------------------------------------
+
+const EARLEST_YEAR = 2020;
+const CURRENT_YEAR = new Date().getFullYear();
+const CURRENT_MONTH = new Date().getMonth() + 1;
+
+const getDates = () => {
+  const dates = [];
+  for (let year = EARLEST_YEAR; year <= CURRENT_YEAR; year++) {
+    const endMonth = year === CURRENT_YEAR ? CURRENT_MONTH : 12;
+    for (let month = 1; month <= endMonth; month++) {
+      dates.push(year + '-' + month.toString().padStart(2, '0'));
+    }
+  }
+  return dates;
+};
+
+// ----------------------------------------
+// Lists
+// ----------------------------------------
+
+export const FORMATTED_LISTS = [
   {
     category: 'user',
     lists: [
@@ -141,3 +164,21 @@ export const LISTS = [
     ],
   },
 ];
+
+export const LISTS = FORMATTED_LISTS.flatMap((category) =>
+  category.lists.map((list) => list.list)
+);
+
+// ----------------------------------------
+// List and dates
+// ----------------------------------------
+
+export const getListAndDateTuples = () => {
+  const listAndDateTuples = [];
+  for (const list of LISTS) {
+    for (const date of getDates()) {
+      listAndDateTuples.push({ list, date });
+    }
+  }
+  return listAndDateTuples;
+};
