@@ -1,5 +1,6 @@
 import Navbar from './Navbar';
 import ThreadPreview from './ThreadPreview';
+import ThreadView from './ThreadView';
 
 interface PageProps {
   list?: string;
@@ -21,7 +22,9 @@ const Page = async ({ list }: PageProps) => {
           <ThreadPreview />
           <ThreadPreview />
         </div>
-        <div className='col-span-2'></div>
+        <div className='col-span-2'>
+          <ThreadView />
+        </div>
       </main>
     </div>
   );
