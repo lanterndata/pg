@@ -8,7 +8,13 @@ function formatDateAsYYYYMMDD(date: Date) {
 }
 
 interface ThreadPreviewProps {
-  thread: { id: string; from: string; subject: string; ts: Date };
+  thread: {
+    id: string;
+    from: string;
+    subject: string;
+    ts: Date;
+    count: number;
+  };
   isActive?: boolean;
 }
 
@@ -19,9 +25,12 @@ const ThreadPreview = ({ thread, isActive }: ThreadPreviewProps) => (
       isActive ? 'bg-teal-100' : 'bg-white hover:bg-teal-50'
     )}
   >
-    <div className='flex justify-between mb-1 text-sm'>
+    <div className='flex mb-1 text-sm'>
       <p>{thread.from}</p>
-      <p>{formatDateAsYYYYMMDD(thread.ts)}</p>
+      {thread.count > 1 && (
+        <p className='ml-2 text-stone-400'>{thread.count}</p>
+      )}
+      <p className='ml-auto'>{formatDateAsYYYYMMDD(thread.ts)}</p>
     </div>
     <p className='font-medium'>{thread.subject}</p>
   </div>

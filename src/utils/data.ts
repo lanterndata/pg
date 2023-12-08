@@ -19,6 +19,13 @@ export async function getThreads(list: string) {
   if (threadIds.length === 0) {
     return [];
   }
+  const counts = await db
+    .selectFrom('threads')
+    .select('threadId')
+    .select((eb) => eb.fn.count('messageId').as('count'))
+    .where('threadId', 'in', threadIds)
+    .groupBy('threadId')
+    .execute();
   const threads = await db
     .selectFrom('messages')
     .select(['id', 'subject', 'ts', 'from'])
@@ -28,5 +35,6 @@ export async function getThreads(list: string) {
   return threads.map((thread) => ({
     ...thread,
     from: parseNameFromString(thread.from),
+    count: counts.find((count) => count.threadId === thread.id)?.count || 1,
   }));
 }
