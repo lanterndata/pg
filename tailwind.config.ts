@@ -17,6 +17,7 @@ const config: Config = {
         teal: {
           '50': '#f2fbf8',
           '100': '#d4f3e9',
+          '150': '#beecde',
           '200': '#a9e6d4',
           '300': '#76d2ba',
           '400': '#4bb89f',
