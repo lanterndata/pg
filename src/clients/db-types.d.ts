@@ -11,15 +11,15 @@ export interface ErrorMessages {
 }
 
 export interface Messages {
-  body: string | null;
-  cc: string[] | null;
-  from: string | null;
+  body: string;
+  cc: string[];
+  from: string;
   id: string;
   inReplyTo: string | null;
-  lists: string[] | null;
-  subject: string | null;
-  to: string[] | null;
-  ts: Timestamp | null;
+  lists: string[];
+  subject: string;
+  to: string[];
+  ts: Timestamp;
 }
 
 export interface SchemaMigrations {
@@ -32,9 +32,15 @@ export interface ScrapeLogs {
   list: string;
 }
 
+export interface Threads {
+  messageId: string | null;
+  threadId: string | null;
+}
+
 export interface DB {
   errorMessages: ErrorMessages;
   messages: Messages;
   schemaMigrations: SchemaMigrations;
   scrapeLogs: ScrapeLogs;
+  threads: Threads;
 }

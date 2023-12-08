@@ -36,7 +36,7 @@ async function fetchMessage(id: string) {
 
   const subject = $('tr th:contains("Subject:") + td').text().trim();
 
-  const body = $('.message-content').html()?.trim();
+  const body = $('.message-content').html()!.trim();
 
   const ts = $('tr th:contains("Date:") + td').text().trim();
 

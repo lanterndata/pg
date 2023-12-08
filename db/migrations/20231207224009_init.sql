@@ -11,12 +11,12 @@ create table messages (
   id text primary key,
   lists text[],
   in_reply_to text,
-  ts timestamptz,
-  subject text,
-  body text,
-  "from" text,
-  "to" text[],
-  cc text[]
+  ts timestamptz not null,
+  subject text not null,
+  body text not null,
+  "from" text not null,
+  "to" text[] not null,
+  cc text[] not null
 );
 create index idx_messages_ts on messages(ts);
 create index idx_messages_in_reply_to on messages(in_reply_to);
