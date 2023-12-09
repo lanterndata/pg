@@ -15,6 +15,7 @@ interface ThreadPreviewProps {
     subject: string;
     ts: Date;
     count: number;
+    score?: number;
   };
   onClick: () => void;
   isActive?: boolean;
@@ -31,6 +32,16 @@ const ThreadPreview = ({ thread, onClick, isActive }: ThreadPreviewProps) => (
     )}
     onClick={onClick}
   >
+    {thread.score && (
+      <div
+        className={classNames(
+          'text-sm mb-1',
+          isActive ? 'text-white' : 'text-stone-300'
+        )}
+      >
+        Score: {thread.score.toPrecision(3)}
+      </div>
+    )}
     <div className='flex mb-1 text-sm'>
       <p>{thread.from}</p>
       {thread.count > 1 && (

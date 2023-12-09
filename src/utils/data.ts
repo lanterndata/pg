@@ -1,11 +1,11 @@
 'use server';
 import db from '@/clients/db';
+import { sql } from 'kysely';
 
 function parseNameFromString(nameAndEmail: string) {
-  const regex = /([A-Za-z\s]+)\s*</;
+  const regex = /(.+?)\s*(?:<.+>)?$/;
   const match = nameAndEmail.match(regex);
-  if (match) return match[1].trim();
-  return nameAndEmail;
+  return match ? match[1].replace(/"/g, '') : '';
 }
 
 async function getThreadsFromThreadIds(threadIds: string[]) {
@@ -64,5 +64,22 @@ export async function getThreadMessages(threadId: string) {
 }
 
 export async function searchThreads(query: string) {
-  return [];
+  const score = sql`cos_dist(text_embedding('BAAI/bge-small-en', subject), body_embedding)`;
+  const messageIdsAndScores = await db
+    .selectFrom('messages')
+    .select(['id', score.as('score')])
+    .orderBy(
+      sql`text_embedding('BAAI/bge-small-en', ${query}) <-> body_embedding`
+    )
+    .limit(20)
+    .execute();
+  const messageIds = messageIdsAndScores.map((row) => row.id);
+  const messages = await getThreadsFromThreadIds(messageIds);
+  const messagesWithScores = messages
+    .map((message) => ({
+      ...message,
+      score: messageIdsAndScores.find((row) => row.id === message.id)?.score,
+    }))
+    .sort((a, b) => (a.score as number) - (b.score as number));
+  return messagesWithScores;
 }

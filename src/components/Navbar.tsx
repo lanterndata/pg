@@ -31,7 +31,7 @@ const Navbar = ({ activeList, searchValue, setSearchValue }: NavbarProps) => (
             <Link key={l.list} href={'/' + l.list}>
               <div
                 className={classNames(
-                  'py-1 rounded px-5',
+                  'py-1 px-5',
                   isActive
                     ? 'bg-slate-700 text-stone-100'
                     : 'hover:bg-slate-900'

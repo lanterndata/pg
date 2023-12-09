@@ -3,19 +3,29 @@ import MessageView, { Message } from './MessageView';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+const LoadingView = () => <div className='pt-6 pl-8'>Loading...</div>;
 const EmptyView = () => <div className='pt-6 pl-8'>No thread to show.</div>;
 
 interface ThreadViewProps {
+  loading?: boolean;
   threadId?: string;
   getThreadMessages: (threadId: string) => Promise<Message[]>;
 }
 
-const ThreadView = ({ threadId, getThreadMessages }: ThreadViewProps) => {
+const ThreadView = ({
+  loading,
+  threadId,
+  getThreadMessages,
+}: ThreadViewProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   useEffect(() => {
     if (threadId)
       getThreadMessages(threadId).then((messages) => setMessages(messages));
   }, [threadId, getThreadMessages]);
+
+  if (loading) {
+    return <LoadingView />;
+  }
 
   if (!threadId) {
     return <EmptyView />;

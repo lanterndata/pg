@@ -38,21 +38,25 @@ const PageClient = ({
   const shouldPerformSearch = debouncedSearchValue.length > 2;
 
   useEffect(() => {
-    if (!shouldPerformSearch)
+    if (!shouldPerformSearch) {
+      setLoading(true);
       getThreads(list, page).then((threads) => {
         setThreads(threads);
         if (threads.length > 0) setThreadId(threads[0].id);
         setLoading(false);
       });
+    }
   }, [list, page, getThreads, shouldPerformSearch]);
 
   useEffect(() => {
-    if (shouldPerformSearch)
+    if (shouldPerformSearch) {
+      setLoading(true);
       searchThreads(debouncedSearchValue).then((threads) => {
         setThreads(threads);
         if (threads.length > 0) setThreadId(threads[0].id);
         setLoading(false);
       });
+    }
   }, [debouncedSearchValue, shouldPerformSearch, searchThreads]);
 
   return (
@@ -65,19 +69,24 @@ const PageClient = ({
 
       <main className='h-screen w-full white grid grid-cols-4'>
         <div className='bg-slate-900 px-2 pt-2 pb-4 flex flex-col gap-y-2 overflow-y-scroll'>
-          {!loading && threads.length === 0 && (
-            <p className='text-stone-500 p-4'>No threads found.</p>
+          <p className='text-stone-50 mt-5'>
+            {shouldPerformSearch ? 'Query: ' + searchValue : '# ' + list}
+          </p>
+          {!loading && threads.length === 0 ? (
+            <p className='text-stone-500'>No threads found.</p>
+          ) : loading ? (
+            <p className='text-stone-500'>Loading threads...</p>
+          ) : (
+            threads.map((thread) => (
+              <ThreadPreview
+                key={thread.id}
+                list={list}
+                thread={thread}
+                isActive={threadId === thread.id}
+                onClick={() => setThreadId(thread.id)}
+              />
+            ))
           )}
-
-          {threads.map((thread) => (
-            <ThreadPreview
-              key={thread.id}
-              list={list}
-              thread={thread}
-              isActive={threadId === thread.id}
-              onClick={() => setThreadId(thread.id)}
-            />
-          ))}
 
           {!shouldPerformSearch && (threads.length === 20 || page > 0) && (
             <div className='flex justify-between mt-4 mx-2 text-stone-500 font-medium'>
@@ -98,6 +107,7 @@ const PageClient = ({
         </div>
         <div className='col-span-3 overflow-y-scroll bg-slate-200 min-h-screen'>
           <ThreadView
+            loading={loading}
             threadId={threadId}
             getThreadMessages={getThreadMessages}
           />
