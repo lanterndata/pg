@@ -2,7 +2,7 @@
 // Dates
 // ----------------------------------------------------
 
-const EARLEST_YEAR = 2023;
+const EARLEST_YEAR = 2019;
 const CURRENT_YEAR = new Date().getFullYear();
 const CURRENT_MONTH = new Date().getMonth() + 1;
 
