@@ -13,8 +13,8 @@ const ThreadView = async ({ threadId }: ThreadViewProps) => {
   const message = messages.find((m) => m.id === threadId)!;
 
   return (
-    <div className='pr-8 py-8'>
-      <h1 className='ml-8 text-xl mb-4'>{message.subject}</h1>
+    <div className='pr-12 pl-4 pt-8 pb-16 bg-teal-50'>
+      <h1 className='ml-6 text-2xl mb-8 font-medium'>{message.subject}</h1>
 
       <MessageView message={message} messages={messages} />
     </div>

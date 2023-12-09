@@ -16,7 +16,7 @@ const Page = async ({ list, thread }: PageProps) => {
     <div className='flex'>
       <Navbar activeList={activeList} />
       <main className='h-screen w-full white grid grid-cols-3'>
-        <div className='bg-teal-50 overflow-y-scroll p-2 flex flex-col gap-y-2'>
+        <div className='bg-teal-50 p-2 flex flex-col gap-y-2 overflow-y-scroll'>
           {threads.map((thread) => (
             <ThreadPreview
               key={thread.id}
@@ -26,7 +26,7 @@ const Page = async ({ list, thread }: PageProps) => {
             />
           ))}
         </div>
-        <div className='col-span-2'>
+        <div className='col-span-2 overflow-y-scroll'>
           <ThreadView threadId={activeThreadId} />
         </div>
       </main>
