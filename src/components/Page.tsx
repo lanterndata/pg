@@ -1,35 +1,21 @@
-import { getThreads } from '@/utils/data';
 import Navbar from './Navbar';
-import ThreadPreview from './ThreadPreview';
-import ThreadView from './ThreadView';
+import Main from './Main';
+import { getThreadMessages, getThreads } from '@/utils/data';
 
 interface PageProps {
   list?: string;
-  thread?: string;
 }
 
-const Page = async ({ list, thread }: PageProps) => {
+const Page = async ({ list }: PageProps) => {
   const activeList = list || 'pgsql-admin';
-  const threads = await getThreads(activeList);
-  const activeThreadId = thread || threads[0]?.id;
   return (
     <div className='flex'>
       <Navbar activeList={activeList} />
-      <main className='h-screen w-full white grid grid-cols-4'>
-        <div className='bg-slate-100 p-2 flex flex-col gap-y-2 overflow-y-scroll'>
-          {threads.map((thread) => (
-            <ThreadPreview
-              key={thread.id}
-              list={activeList}
-              thread={thread}
-              isActive={activeThreadId === thread.id}
-            />
-          ))}
-        </div>
-        <div className='col-span-3 overflow-y-scroll'>
-          <ThreadView threadId={activeThreadId} />
-        </div>
-      </main>
+      <Main
+        list={activeList}
+        getThreads={getThreads}
+        getThreadMessages={getThreadMessages}
+      />
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import Link from 'next/link';
 
 function formatDateAsYYYYMMDD(date: Date) {
   const year = date.getFullYear();
@@ -20,24 +19,23 @@ interface ThreadPreviewProps {
   isActive?: boolean;
 }
 
-const ThreadPreview = ({ list, thread, isActive }: ThreadPreviewProps) => (
-  <Link href={`/${list}/${thread.id}`} id={'preview-' + thread.id}>
-    <div
-      className={classNames(
-        'px-4 py-4 rounded border shadow-sm',
-        isActive ? 'bg-slate-200' : 'bg-white hover:bg-slate-50'
+const ThreadPreview = ({ thread, isActive }: ThreadPreviewProps) => (
+  <div
+    id={'preview-' + thread.id}
+    className={classNames(
+      'px-4 py-4 rounded border shadow-sm',
+      isActive ? 'bg-slate-200' : 'bg-white hover:bg-slate-50'
+    )}
+  >
+    <div className='flex mb-1 text-sm'>
+      <p>{thread.from}</p>
+      {thread.count > 1 && (
+        <p className='ml-2 text-stone-400'>{thread.count}</p>
       )}
-    >
-      <div className='flex mb-1 text-sm'>
-        <p>{thread.from}</p>
-        {thread.count > 1 && (
-          <p className='ml-2 text-stone-400'>{thread.count}</p>
-        )}
-        <p className='ml-auto'>{formatDateAsYYYYMMDD(thread.ts)}</p>
-      </div>
-      <p className='font-medium'>{thread.subject}</p>
+      <p className='ml-auto'>{formatDateAsYYYYMMDD(thread.ts)}</p>
     </div>
-  </Link>
+    <p className='font-medium'>{thread.subject}</p>
+  </div>
 );
 
 export default ThreadPreview;

@@ -12,9 +12,10 @@ function formatDate(date: Date) {
   return formattedDate;
 }
 
-interface Message {
+export interface Message {
   id: string;
   from: string;
+  subject: string;
   ts: Date;
   body: string;
   inReplyTo: string | null;

@@ -1,3 +1,4 @@
+'use server';
 import db from '@/clients/db';
 
 function parseNameFromString(nameAndEmail: string) {

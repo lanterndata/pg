@@ -1,17 +1,28 @@
-import { getThreadMessages } from '@/utils/data';
-import MessageView from './MessageView';
+'use client';
+import MessageView, { Message } from './MessageView';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 interface ThreadViewProps {
   threadId?: string;
+  getThreadMessages: (threadId: string) => Promise<Message[]>;
 }
 
-const ThreadView = async ({ threadId }: ThreadViewProps) => {
+const ThreadView = ({ threadId, getThreadMessages }: ThreadViewProps) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  useEffect(() => {
+    if (threadId)
+      getThreadMessages(threadId).then((messages) => setMessages(messages));
+  }, [threadId, getThreadMessages]);
+
   if (!threadId) {
     return null;
   }
 
-  const messages = await getThreadMessages(threadId);
-  const message = messages.find((m) => m.id === threadId)!;
+  const message = messages.find((m) => m.id === threadId);
+  if (!message) {
+    return null;
+  }
+
   const href = `https://www.postgresql.org/message-id/${threadId}`;
 
   return (
