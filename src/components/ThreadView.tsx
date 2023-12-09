@@ -19,11 +19,12 @@ const ThreadView = ({
 }: ThreadViewProps) => {
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [message, setMessage] = useState<Message | null>(null);
   useEffect(() => {
     if (threadId) {
-      setLoading(true);
       getThreadMessages(threadId).then((messages) => {
         setMessages(messages);
+        setMessage(messages.find((m) => m.id === threadId) ?? null);
         setLoading(false);
       });
     }
@@ -37,7 +38,6 @@ const ThreadView = ({
     return <EmptyView />;
   }
 
-  const message = messages.find((m) => m.id === threadId);
   if (!message) {
     return <EmptyView />;
   }
