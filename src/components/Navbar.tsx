@@ -1,13 +1,15 @@
 import { CATEGORY_LISTS } from '@/utils/constants';
 import classNames from 'classnames';
 import Link from 'next/link';
-import SearchButton from './SearchButton';
+import SearchInput from './SearchInput';
 
 interface NavbarProps {
   activeList: string;
+  searchValue: string;
+  setSearchValue: (value: string) => void;
 }
 
-const Navbar = ({ activeList }: NavbarProps) => (
+const Navbar = ({ activeList, searchValue, setSearchValue }: NavbarProps) => (
   <nav className='h-screen w-80 bg-slate-950 text-stone-300 py-8 overflow-y-scroll'>
     <div className='px-5'>
       <Link href='/'>
@@ -15,7 +17,7 @@ const Navbar = ({ activeList }: NavbarProps) => (
       </Link>
       <p className='font-medium mt-2 mb-8 text-2xl'>Mailing Lists</p>
 
-      <SearchButton />
+      <SearchInput value={searchValue} setValue={setSearchValue} />
     </div>
 
     {CATEGORY_LISTS.map((cl) => (

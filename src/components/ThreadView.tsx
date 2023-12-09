@@ -3,6 +3,8 @@ import MessageView, { Message } from './MessageView';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+const EmptyView = () => <div className='pt-6 pl-8'>No thread to show.</div>;
+
 interface ThreadViewProps {
   threadId?: string;
   getThreadMessages: (threadId: string) => Promise<Message[]>;
@@ -16,18 +18,18 @@ const ThreadView = ({ threadId, getThreadMessages }: ThreadViewProps) => {
   }, [threadId, getThreadMessages]);
 
   if (!threadId) {
-    return null;
+    return <EmptyView />;
   }
 
   const message = messages.find((m) => m.id === threadId);
   if (!message) {
-    return null;
+    return <EmptyView />;
   }
 
   const href = `https://www.postgresql.org/message-id/${threadId}`;
 
   return (
-    <div className='pr-12 pl-4 pt-8 pb-8 bg-slate-200 min-h-screen'>
+    <div className='pr-12 pl-4 pt-8 pb-8'>
       <div className='ml-8 mb-8'>
         <h1 className='text-2xl font-medium'>{message.subject}</h1>
         <div className='mt-2 w-full h-0.5 bg-slate-300' />

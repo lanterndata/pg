@@ -8,17 +8,7 @@ function parseNameFromString(nameAndEmail: string) {
   return nameAndEmail;
 }
 
-export async function getThreads(list: string, page: number) {
-  const threadIds = await db
-    .selectFrom('messages')
-    .select('id')
-    .where('inReplyTo', 'is', null)
-    .where((eb) => eb(eb.val(list), '=', eb.fn.any('lists')))
-    .orderBy('ts', 'desc')
-    .offset(page * 20)
-    .limit(20)
-    .execute()
-    .then((rows) => rows.map((row) => row.id));
+async function getThreadsFromThreadIds(threadIds: string[]) {
   if (threadIds.length === 0) {
     return [];
   }
@@ -44,6 +34,20 @@ export async function getThreads(list: string, page: number) {
   }));
 }
 
+export async function getThreads(list: string, page: number) {
+  const threadIds = await db
+    .selectFrom('messages')
+    .select('id')
+    .where('inReplyTo', 'is', null)
+    .where((eb) => eb(eb.val(list), '=', eb.fn.any('lists')))
+    .orderBy('ts', 'desc')
+    .offset(page * 20)
+    .limit(20)
+    .execute()
+    .then((rows) => rows.map((row) => row.id));
+  return await getThreadsFromThreadIds(threadIds);
+}
+
 export async function getThreadMessages(threadId: string) {
   const messageIds = await db
     .selectFrom('threads')
@@ -57,4 +61,8 @@ export async function getThreadMessages(threadId: string) {
     .where('id', 'in', messageIds)
     .execute();
   return messages;
+}
+
+export async function searchThreads(query: string) {
+  return [];
 }
