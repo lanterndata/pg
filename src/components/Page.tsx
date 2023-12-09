@@ -5,12 +5,13 @@ import ThreadView from './ThreadView';
 
 interface PageProps {
   list?: string;
+  thread?: string;
 }
 
-const Page = async ({ list }: PageProps) => {
+const Page = async ({ list, thread }: PageProps) => {
   const activeList = list || 'pgsql-admin';
   const threads = await getThreads(activeList);
-  const activeThreadId = threads[0]?.id;
+  const activeThreadId = thread || threads[0]?.id;
   return (
     <div className='flex'>
       <Navbar activeList={activeList} />
@@ -19,6 +20,7 @@ const Page = async ({ list }: PageProps) => {
           {threads.map((thread) => (
             <ThreadPreview
               key={thread.id}
+              list={activeList}
               thread={thread}
               isActive={activeThreadId === thread.id}
             />
