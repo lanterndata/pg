@@ -8,13 +8,15 @@ function parseNameFromString(nameAndEmail: string) {
   return nameAndEmail;
 }
 
-export async function getThreads(list: string) {
+export async function getThreads(list: string, page: number) {
   const threadIds = await db
     .selectFrom('messages')
     .select('id')
     .where('inReplyTo', 'is', null)
     .where((eb) => eb(eb.val(list), '=', eb.fn.any('lists')))
     .orderBy('ts', 'desc')
+    .offset(page * 20)
+    .limit(20)
     .execute()
     .then((rows) => rows.map((row) => row.id));
   if (threadIds.length === 0) {

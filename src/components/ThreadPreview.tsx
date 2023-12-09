@@ -16,16 +16,20 @@ interface ThreadPreviewProps {
     ts: Date;
     count: number;
   };
+  onClick: () => void;
   isActive?: boolean;
 }
 
-const ThreadPreview = ({ thread, isActive }: ThreadPreviewProps) => (
+const ThreadPreview = ({ thread, onClick, isActive }: ThreadPreviewProps) => (
   <div
     id={'preview-' + thread.id}
     className={classNames(
-      'px-4 py-4 rounded border shadow-sm',
-      isActive ? 'bg-slate-200' : 'bg-white hover:bg-slate-50'
+      'px-4 py-4 rounded border shadow-sm border-slate-600 cursor-pointer',
+      isActive
+        ? 'bg-slate-600 text-stone-100'
+        : 'bg-slate-800 text-stone-400 hover:bg-slate-700 hover:text-stone-300'
     )}
+    onClick={onClick}
   >
     <div className='flex mb-1 text-sm'>
       <p>{thread.from}</p>
