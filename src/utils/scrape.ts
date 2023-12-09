@@ -69,6 +69,8 @@ async function fetchMessage(id: string) {
   };
 }
 
+// TODO: This sometimes doesn't get the full month. To see the full data, you may need to select the date. As a result, some data is missing.
+// For example, in psql-bugs May 2020, the last visible date on the page is 2020-05-26.
 export async function scrapeMessages() {
   const listAndDateTuples = getListAndDateTuples();
   const seenListAndDateTuples = await db
