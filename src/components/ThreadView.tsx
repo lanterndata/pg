@@ -1,7 +1,22 @@
-const ThreadView = () => {
+import { getThreadMessages } from '@/utils/data';
+import MessageView from './MessageView';
+interface ThreadViewProps {
+  threadId?: string;
+}
+
+const ThreadView = async ({ threadId }: ThreadViewProps) => {
+  if (!threadId) {
+    return null;
+  }
+
+  const messages = await getThreadMessages(threadId);
+  const message = messages.find((m) => m.id === threadId)!;
+
   return (
-    <div>
-      <h1>Get the statistics based on the application name and IP address</h1>
+    <div className='pr-8 py-8'>
+      <h1 className='ml-8 text-xl mb-4'>{message.subject}</h1>
+
+      <MessageView message={message} messages={messages} />
     </div>
   );
 };

@@ -40,3 +40,18 @@ export async function getThreads(list: string) {
       1,
   }));
 }
+
+export async function getThreadMessages(threadId: string) {
+  const messageIds = await db
+    .selectFrom('threads')
+    .select('messageId')
+    .where('threadId', '=', threadId)
+    .execute()
+    .then((rows) => rows.map((row) => row.messageId));
+  const messages = await db
+    .selectFrom('messages')
+    .selectAll()
+    .where('id', 'in', messageIds)
+    .execute();
+  return messages;
+}

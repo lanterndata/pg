@@ -25,7 +25,7 @@ const Page = async ({ list }: PageProps) => {
           ))}
         </div>
         <div className='col-span-2'>
-          <ThreadView />
+          <ThreadView threadId={activeThreadId} />
         </div>
       </main>
     </div>
