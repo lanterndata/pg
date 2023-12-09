@@ -13,17 +13,23 @@ interface ThreadViewProps {
 }
 
 const ThreadView = ({
-  loading,
+  loading: threadsLoading,
   threadId,
   getThreadMessages,
 }: ThreadViewProps) => {
+  const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   useEffect(() => {
-    if (threadId)
-      getThreadMessages(threadId).then((messages) => setMessages(messages));
+    if (threadId) {
+      setLoading(true);
+      getThreadMessages(threadId).then((messages) => {
+        setMessages(messages);
+        setLoading(false);
+      });
+    }
   }, [threadId, getThreadMessages]);
 
-  if (loading) {
+  if (loading || threadsLoading) {
     return <LoadingView />;
   }
 
