@@ -1,6 +1,7 @@
 import { CATEGORY_LISTS } from '@/utils/constants';
 import classNames from 'classnames';
 import Link from 'next/link';
+import SearchButton from './SearchButton';
 
 interface NavbarProps {
   activeList: string;
@@ -13,6 +14,8 @@ const Navbar = ({ activeList }: NavbarProps) => (
         <p className='font-semibold text-sm'>POSTGRES.FYI</p>
       </Link>
       <p className='font-medium mt-2 mb-8 text-2xl'>Mailing Lists</p>
+
+      <SearchButton />
     </div>
 
     {CATEGORY_LISTS.map((cl) => (
