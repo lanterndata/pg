@@ -28,9 +28,9 @@ interface MessageViewProps {
 const MessageView = ({ message, messages }: MessageViewProps) => {
   const replies = messages.filter((m) => m.inReplyTo === message.id);
   return (
-    <div className='ml-6'>
-      <div className='bg-white p-4 rounded border border-teal-200 shadow-sm w-full'>
-        <div className='flex justify-between mb-4 text-stone-400'>
+    <div className='ml-8'>
+      <div className='bg-white p-4 rounded border border-slate-300 shadow drop-shadow w-full'>
+        <div className='flex justify-between mb-4 text-stone-400 text-sm'>
           <p>{message.from}</p>
           <p>{formatDate(message.ts)}</p>
         </div>
@@ -45,7 +45,7 @@ const MessageView = ({ message, messages }: MessageViewProps) => {
 
       {replies.length > 0 && (
         <div className='flex items-stretch pt-8'>
-          <div className='w-px bg-teal-200' />
+          <div className='w-0.5 bg-slate-200' />
           <div className='w-full flex flex-col gap-y-8'>
             {replies.map((reply) => (
               <MessageView key={reply.id} message={reply} messages={messages} />

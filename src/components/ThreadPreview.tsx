@@ -21,11 +21,11 @@ interface ThreadPreviewProps {
 }
 
 const ThreadPreview = ({ list, thread, isActive }: ThreadPreviewProps) => (
-  <Link href={`/${list}/${thread.id}`}>
+  <Link href={`/${list}/${thread.id}`} id={'preview-' + thread.id}>
     <div
       className={classNames(
         'px-4 py-4 rounded border shadow-sm',
-        isActive ? 'bg-teal-100' : 'bg-white hover:bg-teal-50'
+        isActive ? 'bg-slate-200' : 'bg-white hover:bg-slate-50'
       )}
     >
       <div className='flex mb-1 text-sm'>
