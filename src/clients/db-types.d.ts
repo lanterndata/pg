@@ -12,6 +12,8 @@ export interface ErrorMessages {
 
 export interface Messages {
   body: string;
+  bodyEmbedding: number[] | null;
+  bodyTsvector: Generated<string | null>;
   cc: string[];
   from: string;
   id: string;

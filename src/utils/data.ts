@@ -19,6 +19,34 @@ async function getThreadsFromThreadIds(threadIds: string[]) {
     .where('threadId', 'in', threadIds)
     .groupBy('threadId')
     .execute();
+  const messageIds = counts.map((count) => count.threadId);
+  const messages = await db
+    .selectFrom('messages')
+    .selectAll()
+    .where('id', 'in', messageIds)
+    .orderBy('ts', 'desc')
+    .execute();
+  return messages.map((message) => ({
+    ...message,
+    from: parseNameFromString(message.from),
+    count:
+      (counts.find((count) => count.threadId === message.id)
+        ?.count as number) || 1,
+  }));
+}
+
+async function getThreadsFromMessageIds(messageIds: string[]) {
+  if (messageIds.length === 0) {
+    return [];
+  }
+  const counts = await db
+    .selectFrom('threads')
+    .select('threadId')
+    .select((eb) => eb.fn.count('messageId').as('count'))
+    .where('messageId', 'in', messageIds)
+    .groupBy('threadId')
+    .execute();
+  const threadIds = counts.map((count) => count.threadId);
   const threads = await db
     .selectFrom('messages')
     .select(['id', 'subject', 'ts', 'from'])
@@ -63,7 +91,8 @@ export async function getThreadMessages(threadId: string) {
   return messages;
 }
 
-export async function searchThreads(query: string) {
+// Vector search
+export async function searchThreadsVector(query: string) {
   const score = sql`cos_dist(text_embedding('BAAI/bge-small-en', subject), body_embedding)`;
   const messageIdsAndScores = await db
     .selectFrom('messages')
@@ -74,7 +103,7 @@ export async function searchThreads(query: string) {
     .limit(20)
     .execute();
   const messageIds = messageIdsAndScores.map((row) => row.id);
-  const messages = await getThreadsFromThreadIds(messageIds);
+  const messages = await getThreadsFromMessageIds(messageIds);
   const messagesWithScores = messages
     .map((message) => ({
       ...message,
@@ -82,4 +111,16 @@ export async function searchThreads(query: string) {
     }))
     .sort((a, b) => (a.score as number) - (b.score as number));
   return messagesWithScores;
+}
+
+// Text search
+export async function searchThreadsText(query: string) {
+  const messageIds = await db
+    .selectFrom('messages')
+    .select('id')
+    .where(sql`body_tsvector @@ to_tsquery('english', ${query})`)
+    .orderBy('ts', 'desc')
+    .execute()
+    .then((rows) => rows.map((row) => row.id));
+  return await getThreadsFromMessageIds(messageIds);
 }
