@@ -13,7 +13,7 @@ const Navbar = ({ activeList, searchValue, setSearchValue }: NavbarProps) => (
   <nav className='h-screen w-80 bg-slate-950 text-stone-300 py-8 overflow-y-scroll'>
     <div className='px-5'>
       <Link href='/'>
-        <p className='font-semibold text-sm'>POSTGRES.FYI</p>
+        <p className='font-semibold text-sm'>PG.LANTERN.DEV</p>
       </Link>
       <p className='font-medium mt-2 mb-8 text-2xl'>Mailing Lists</p>
 
