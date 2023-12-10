@@ -29,7 +29,7 @@ interface MessageViewProps {
 
 function startsWithQuote(line: string) {
   const l = line.trim();
-  return l.startsWith('&gt;') || l.startsWith('> ');
+  return l.startsWith('&gt;') || l.startsWith('>');
 }
 
 function isAuthorLine(line: string) {
@@ -52,7 +52,7 @@ function modifyParagraph(paragraph: HTMLParagraphElement) {
   const lines = paragraph.innerHTML.split('<br>');
   for (let i = 0; i < lines.length; i++) {
     if (startsWithQuote(lines[i]) || isAuthorLine(lines[i])) {
-      lines[i] = `<span class='quoted-text'>${lines[i].trim()}</span>`;
+      lines[i] = `<span class='text-stone-400'>${lines[i].trim()}</span>`;
     }
   }
 
@@ -72,14 +72,14 @@ const MessageView = ({ message, messages }: MessageViewProps) => {
       let isQuote = false;
       for (const paragraph of paragraphs) {
         if (isQuote) {
-          paragraph.classList.add('quoted-text');
+          paragraph.classList.add('text-stone-400');
         } else if (
           paragraph.textContent?.includes('________________________________') ||
           paragraph.textContent?.includes('Sent from my iPhone') ||
           paragraph.textContent?.includes('Sent from my Galaxy') ||
           paragraph.textContent?.startsWith('-- ')
         ) {
-          paragraph.classList.add('quoted-text');
+          paragraph.classList.add('text-stone-400');
           isQuote = true;
         }
 
@@ -94,7 +94,7 @@ const MessageView = ({ message, messages }: MessageViewProps) => {
 
         // Handle p tag that starts with On [date] [author] wrote: and then has &gt with <br>'s in between
         else if (isAuthorParagraph(paragraph)) {
-          paragraph.classList.add('quoted-text');
+          paragraph.classList.add('text-stone-400');
         }
       }
     }
