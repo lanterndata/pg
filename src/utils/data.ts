@@ -115,10 +115,11 @@ export async function searchThreadsVector(query: string) {
 
 // Text search
 export async function searchThreadsText(query: string) {
+  const formattedQuery = query.trim().split(' ').join(' & ');
   const messageIds = await db
     .selectFrom('messages')
     .select('id')
-    .where(sql`body_tsvector @@ to_tsquery('english', ${query})`)
+    .where(sql`body_tsvector @@ to_tsquery('english', ${formattedQuery})`)
     .orderBy('ts', 'desc')
     .execute()
     .then((rows) => rows.map((row) => row.id));
