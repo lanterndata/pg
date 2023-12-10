@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Loading from './Loader';
 
-const EmptyView = () => <div className='pt-6 pl-8'>No thread to show.</div>;
+const EmptyView = () => <div className='pt-8 pl-8'>No thread to show.</div>;
 
 interface ThreadViewProps {
   loading?: boolean;
@@ -29,6 +29,10 @@ const ThreadView = ({
       });
     }
   }, [threadId, getThreadMessages]);
+
+  if (!threadId && !threadsLoading) {
+    return <EmptyView />;
+  }
 
   if (loading || threadsLoading) {
     return <Loading />;
