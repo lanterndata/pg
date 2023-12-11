@@ -98,7 +98,7 @@ export async function searchThreadsVector(query: string) {
     .selectFrom('messages')
     .select(['id', score.as('score')])
     .orderBy(
-      sql`text_embedding('BAAI/bge-small-en', ${query}) <-> body_embedding`
+      sql`text_embedding('BAAI/bge-small-en', ${query}) <=> body_embedding`
     )
     .limit(20)
     .execute();
@@ -115,11 +115,10 @@ export async function searchThreadsVector(query: string) {
 
 // Text search
 export async function searchThreadsText(query: string) {
-  const formattedQuery = query.trim().split(' ').join(' & ');
   const messageIds = await db
     .selectFrom('messages')
     .select('id')
-    .where(sql`body_tsvector @@ to_tsquery('english', ${formattedQuery})`)
+    .where(sql`body_tsvector @@ plainto_tsquery('english', ${query})`)
     .orderBy('ts', 'desc')
     .execute()
     .then((rows) => rows.map((row) => row.id));

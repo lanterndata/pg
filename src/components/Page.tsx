@@ -1,5 +1,10 @@
 import PageClient from './PageClient';
-import { getThreadMessages, getThreads, searchThreadsText } from '@/utils/data';
+import {
+  getThreadMessages,
+  getThreads,
+  searchThreadsText,
+  searchThreadsVector,
+} from '@/utils/data';
 
 interface PageProps {
   list?: string;
