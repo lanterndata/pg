@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import sanitizeHtml from 'sanitize-html';
 
 function formatDateAsYYYYMMDD(date: Date) {
   const year = date.getFullYear();
@@ -16,6 +17,7 @@ interface ThreadPreviewProps {
     ts: Date;
     count: number;
     score?: number;
+    preview?: string;
   };
   onClick: () => void;
   isActive?: boolean;
@@ -50,6 +52,17 @@ const ThreadPreview = ({ thread, onClick, isActive }: ThreadPreviewProps) => (
       <p className='ml-auto'>{formatDateAsYYYYMMDD(thread.ts)}</p>
     </div>
     <p className='font-medium'>{thread.subject}</p>
+    {thread.preview && (
+      <p
+        className={classNames(
+          'text-sm mt-2',
+          isActive ? 'text-stone-200' : 'text-stone-500'
+        )}
+        dangerouslySetInnerHTML={{
+          __html: sanitizeHtml(thread.preview),
+        }}
+      />
+    )}
   </div>
 );
 

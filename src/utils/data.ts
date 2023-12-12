@@ -35,33 +35,6 @@ async function getThreadsFromThreadIds(threadIds: string[]) {
   }));
 }
 
-async function getThreadsFromMessageIds(messageIds: string[]) {
-  if (messageIds.length === 0) {
-    return [];
-  }
-  const counts = await db
-    .selectFrom('threads')
-    .select('threadId')
-    .select((eb) => eb.fn.count('messageId').as('count'))
-    .where('messageId', 'in', messageIds)
-    .groupBy('threadId')
-    .execute();
-  const threadIds = counts.map((count) => count.threadId);
-  const threads = await db
-    .selectFrom('messages')
-    .select(['id', 'subject', 'ts', 'from'])
-    .where('id', 'in', threadIds)
-    .orderBy('ts', 'desc')
-    .execute();
-  return threads.map((thread) => ({
-    ...thread,
-    from: parseNameFromString(thread.from),
-    count:
-      (counts.find((count) => count.threadId === thread.id)?.count as number) ||
-      1,
-  }));
-}
-
 export async function getThreads(list: string, page: number) {
   const threadIds = await db
     .selectFrom('messages')
@@ -91,6 +64,33 @@ export async function getThreadMessages(threadId: string) {
   return messages;
 }
 
+async function getThreadsFromMessageIds(messageIds: string[]) {
+  if (messageIds.length === 0) {
+    return [];
+  }
+  const counts = await db
+    .selectFrom('threads')
+    .select('threadId')
+    .select((eb) => eb.fn.count('messageId').as('count'))
+    .where('messageId', 'in', messageIds)
+    .groupBy('threadId')
+    .execute();
+  const threadIds = counts.map((count) => count.threadId);
+  const threads = await db
+    .selectFrom('messages')
+    .select(['id', 'subject', 'ts', 'from'])
+    .where('id', 'in', threadIds)
+    .orderBy('ts', 'desc')
+    .execute();
+  return threads.map((thread) => ({
+    ...thread,
+    from: parseNameFromString(thread.from),
+    count:
+      (counts.find((count) => count.threadId === thread.id)?.count as number) ||
+      1,
+  }));
+}
+
 // Vector search
 export async function searchThreadsVector(query: string) {
   const score = sql`cos_dist(text_embedding('BAAI/bge-small-en', subject), body_embedding)`;
@@ -113,14 +113,67 @@ export async function searchThreadsVector(query: string) {
   return messagesWithScores;
 }
 
+async function getThreadsFromMessageIdAndPreviews(
+  messageIdsAndPreviews: { id: string; preview: string }[]
+) {
+  if (messageIdsAndPreviews.length === 0) {
+    return [];
+  }
+
+  console.log(messageIdsAndPreviews);
+  const messageIds = messageIdsAndPreviews.map((row) => row.id);
+  const threadData = await db
+    .selectFrom('threads')
+    .select('threadId')
+    .select((eb) => eb.fn.agg('array_agg', ['messageId']).as('messageIds'))
+    .select((eb) => eb.fn.count('messageId').as('count'))
+    .where('messageId', 'in', messageIds)
+    .groupBy('threadId')
+    .execute();
+
+  const messageIdToPreview = messageIdsAndPreviews.reduce((acc, row) => {
+    acc[row.id] = row.preview;
+    return acc;
+  }, {} as Record<string, string>);
+
+  const threadIds = threadData.map((data) => data.threadId);
+  const threads = await db
+    .selectFrom('messages')
+    .select(['id', 'subject', 'ts', 'from'])
+    .where('id', 'in', threadIds)
+    .orderBy('ts', 'desc')
+    .execute();
+  return threads.map((thread) => {
+    const otherThreadData = threadData.find(
+      (data) => data.threadId === thread.id
+    )!;
+
+    const count = otherThreadData.count || 1;
+
+    // preview is the first preview we can find
+    const preview = (otherThreadData.messageIds as string[])
+      .map((messageId) => messageIdToPreview[messageId])
+      .find((preview) => preview);
+
+    return {
+      ...thread,
+      from: parseNameFromString(thread.from),
+      count,
+      preview,
+    };
+  });
+}
+
 // Text search
 export async function searchThreadsText(query: string) {
-  const messageIds = await db
+  const querySql = sql`ts_headline('english', body, plainto_tsquery('english', ${query}))`;
+  const messageIdAndPreviews = await db
     .selectFrom('messages')
     .select('id')
+    .select(querySql.as('preview'))
     .where(sql`body_tsvector @@ plainto_tsquery('english', ${query})`)
     .orderBy('ts', 'desc')
-    .execute()
-    .then((rows) => rows.map((row) => row.id));
-  return await getThreadsFromMessageIds(messageIds);
+    .limit(20)
+    .execute();
+  return await getThreadsFromMessageIdAndPreviews(messageIdAndPreviews as any);
 }
