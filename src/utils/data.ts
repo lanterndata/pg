@@ -120,7 +120,6 @@ async function getThreadsFromMessageIdAndPreviews(
     return [];
   }
 
-  console.log(messageIdsAndPreviews);
   const messageIds = messageIdsAndPreviews.map((row) => row.id);
   const threadData = await db
     .selectFrom('threads')
