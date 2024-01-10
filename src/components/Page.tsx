@@ -2,8 +2,7 @@ import PageClient from './PageClient';
 import {
   getThreadMessages,
   getThreads,
-  searchThreadsText,
-  searchThreadsVector,
+  searchThreads,
 } from '@/utils/fetch-mail';
 
 interface PageProps {
@@ -17,7 +16,7 @@ const Page = ({ list }: PageProps) => {
       list={activeList}
       getThreads={getThreads}
       getThreadMessages={getThreadMessages}
-      searchThreads={searchThreadsVector}
+      searchThreads={searchThreads}
     />
   );
 };

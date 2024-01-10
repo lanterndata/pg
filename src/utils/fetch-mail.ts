@@ -99,7 +99,8 @@ export async function searchThreadsVector(
   const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_embedding)`;
   const messageIdsAndScores = await db
     .selectFrom('messages')
-    .select(['id', score.as('score')])
+    .select('id')
+    .select(score.as('score'))
     .orderBy(
       sql`text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}) <=> body_embedding`
     )
@@ -107,17 +108,22 @@ export async function searchThreadsVector(
     .execute();
   const messageIds = messageIdsAndScores.map((row) => row.id);
   const messages = await getThreadsFromMessageIds(messageIds);
-  const messagesWithScores = messages
-    .map((message) => ({
-      ...message,
-      score: messageIdsAndScores.find((row) => row.id === message.id)?.score,
-    }))
-    .sort((a, b) => (a.score as number) - (b.score as number));
+  const messagesWithScores = messages.map((message) => ({
+    ...message,
+    score: messageIdsAndScores.find((row) => row.id === message.id)?.score,
+  }));
+
+  if (orderBy === 'relevance') {
+    return messagesWithScores.sort(
+      (a, b) => (a.score as number) - (b.score as number)
+    );
+  }
   return messagesWithScores;
 }
 
 async function getThreadsFromMessageIdAndPreviews(
-  messageIdsAndPreviews: { id: string; preview: string }[]
+  messageIdsAndPreviews: { id: string; preview: string; score: number }[],
+  orderBy: 'relevance' | 'latest'
 ) {
   if (messageIdsAndPreviews.length === 0) {
     return [];
@@ -138,14 +144,20 @@ async function getThreadsFromMessageIdAndPreviews(
     return acc;
   }, {} as Record<string, string>);
 
+  const messageIdToScore = messageIdsAndPreviews.reduce((acc, row) => {
+    acc[row.id] = row.score;
+    return acc;
+  }, {} as Record<string, number>);
+
   const threadIds = threadData.map((data) => data.threadId);
-  const threads = await db
+  const unprocessedThreads = await db
     .selectFrom('messages')
     .select(['id', 'subject', 'ts', 'from'])
     .where('id', 'in', threadIds)
     .orderBy('ts', 'desc')
     .execute();
-  return threads.map((thread) => {
+
+  const threads = unprocessedThreads.map((thread) => {
     const otherThreadData = threadData.find(
       (data) => data.threadId === thread.id
     )!;
@@ -157,13 +169,24 @@ async function getThreadsFromMessageIdAndPreviews(
       .map((messageId) => messageIdToPreview[messageId])
       .find((preview) => preview);
 
+    // score is the highest score we can find
+    const score = (otherThreadData.messageIds as string[])
+      .map((messageId) => messageIdToScore[messageId] || 0)
+      .reduce((acc, score) => Math.max(acc, score), 0);
+
     return {
       ...thread,
       from: parseNameFromString(thread.from),
       count,
       preview,
+      score,
     };
   });
+
+  if (orderBy === 'relevance') {
+    return threads.sort((a, b) => (b.score as number) - (a.score as number));
+  }
+  return threads;
 }
 
 // Text search
@@ -171,14 +194,34 @@ export async function searchThreadsText(
   query: string,
   orderBy: 'relevance' | 'latest'
 ) {
-  const querySql = sql`ts_headline('english', body, plainto_tsquery('english', ${query}))`;
-  const messageIdAndPreviews = await db
+  const querySql = sql`ts_headline('english', body, websearch_to_tsquery('english', ${query}))`;
+  const rankSql = sql`ts_rank_cd(body_tsvector, websearch_to_tsquery('english', ${query}))`;
+
+  let builder = db
     .selectFrom('messages')
     .select('id')
     .select(querySql.as('preview'))
-    .where(sql`body_tsvector @@ plainto_tsquery('english', ${query})`)
-    .orderBy('ts', 'desc')
-    .limit(20)
-    .execute();
-  return await getThreadsFromMessageIdAndPreviews(messageIdAndPreviews as any);
+    .select(rankSql.as('score'))
+    .where(sql`body_tsvector @@ websearch_to_tsquery('english', ${query})`);
+  builder =
+    orderBy === 'relevance'
+      ? builder.orderBy(rankSql, 'desc')
+      : builder.orderBy('ts', 'desc');
+
+  const messageIdAndPreviews = await builder.limit(20).execute();
+  return await getThreadsFromMessageIdAndPreviews(
+    messageIdAndPreviews as any,
+    orderBy
+  );
+}
+
+export async function searchThreads(
+  query: string,
+  orderBy: 'relevance' | 'latest'
+) {
+  if (query.split(' ').length < 4) {
+    return await searchThreadsText(query, orderBy);
+  } else {
+    return await searchThreadsVector(query, orderBy);
+  }
 }

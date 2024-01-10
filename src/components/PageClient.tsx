@@ -67,7 +67,7 @@ const PageClient = ({
   return (
     <div className='flex'>
       <Navbar
-        activeList={list}
+        activeList={searchValue ? '' : list}
         searchValue={searchValue}
         setSearchValue={setSearchValue}
       />
@@ -99,7 +99,7 @@ const PageClient = ({
             threads.map((thread) => (
               <ThreadPreview
                 key={thread.id}
-                list={list}
+                list={searchValue ? list : undefined}
                 thread={thread}
                 isActive={threadId === thread.id}
                 onClick={() => setThreadId(thread.id)}

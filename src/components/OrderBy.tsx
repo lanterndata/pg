@@ -9,7 +9,7 @@ interface OrderByProps {
 const OrderBy = ({ value, orderBy, setOrderBy }: OrderByProps) => (
   <div
     className={classNames(
-      'rounded px-4 py-2 border border-slate-600 cursor-pointer',
+      'rounded px-4 py-2 border border-slate-600 cursor-pointer text-sm text-center',
       orderBy === value
         ? 'bg-slate-600 text-stone-100'
         : 'bg-slate-800 text-stone-400 hover:bg-slate-700 hover:text-stone-300'

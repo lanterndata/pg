@@ -9,7 +9,7 @@ function formatDateAsYYYYMMDD(date: Date) {
 }
 
 interface ThreadPreviewProps {
-  list: string;
+  list?: string;
   thread: {
     id: string;
     from: string;
@@ -23,7 +23,12 @@ interface ThreadPreviewProps {
   isActive?: boolean;
 }
 
-const ThreadPreview = ({ thread, onClick, isActive }: ThreadPreviewProps) => (
+const ThreadPreview = ({
+  thread,
+  list,
+  onClick,
+  isActive,
+}: ThreadPreviewProps) => (
   <div
     id={'preview-' + thread.id}
     className={classNames(
@@ -37,11 +42,12 @@ const ThreadPreview = ({ thread, onClick, isActive }: ThreadPreviewProps) => (
     {thread.score && (
       <div
         className={classNames(
-          'text-sm mb-1',
+          'text-xs mb-1 flex justify-between',
           isActive ? 'text-white' : 'text-stone-300'
         )}
       >
-        Score: {thread.score.toPrecision(3)}
+        <div>#{list}</div>
+        <div>Score: {(thread.score || 1).toPrecision(3)}</div>
       </div>
     )}
     <div className='flex mb-1 text-sm'>
