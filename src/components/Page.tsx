@@ -4,7 +4,7 @@ import {
   getThreads,
   searchThreadsText,
   searchThreadsVector,
-} from '@/utils/data';
+} from '@/utils/fetch-mail';
 
 interface PageProps {
   list?: string;

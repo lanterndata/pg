@@ -4,24 +4,40 @@ import { getListAndDateTuples } from './constants';
 import db from '@/clients/db';
 import _ from 'lodash';
 
-// Sample URL: https://www.postgresql.org/list/pgsql-admin/2023-12/
+const BASE = 'https://www.postgresql.org';
+
+// Sample main URL: https://www.postgresql.org/list/pgsql-admin/2023-12/
+// Sample secondary URL: https://www.postgresql.org/list/pgsql-bugs/since/202305230900
 async function fetchMessageUrls(list: string, date: string) {
-  const url = `https://www.postgresql.org/list/${list}/${date}/`;
-  const response = await axios.get(url);
-  const $ = cheerio.load(response.data);
+  const urls: string[] = [];
 
-  const messageLinks = $('a[href^="/message-id/"]');
-  const messageIds = messageLinks
-    .map((index, element) => $(element).attr('href'))
-    .get()
-    .map((messageUrls) => messageUrls.split('/').pop()!);
+  urls.push(`${BASE}/list/${list}/${date}/`);
+  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}060000`);
+  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}110000`);
+  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}160000`);
+  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}210000`);
+  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}260000`);
 
-  return messageIds;
+  const messageIds: string[] = [];
+
+  for (const url of urls) {
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const messageLinks = $('a[href^="/message-id/"]');
+    messageIds.push(
+      ...messageLinks
+        .map((index, element) => $(element).attr('href'))
+        .get()
+        .map((messageUrls) => messageUrls.split('/').pop()!)
+    );
+  }
+  return _.uniq(messageIds);
 }
 
 // Sample URL: https://www.postgresql.org/message-id/34a83d6f68c2d513a88acb40cdc581c43586a746.camel%40cybertec.at
 async function fetchMessage(id: string) {
-  const url = `https://www.postgresql.org/message-id/${id}`;
+  const url = `${BASE}/message-id/${id}`;
   const response = await axios.get(url);
   const $ = cheerio.load(response.data);
 
@@ -69,12 +85,10 @@ async function fetchMessage(id: string) {
   };
 }
 
-// TODO: This sometimes doesn't get the full month. To see the full data, you may need to select the date. As a result, some data is missing.
-// For example, in psql-bugs May 2020, the last visible date on the page is 2020-05-26.
 export async function scrapeMessages() {
   const listAndDateTuples = getListAndDateTuples();
   const seenListAndDateTuples = await db
-    .selectFrom('scrapeLogs')
+    .selectFrom('messagesScrapeLogs')
     .select(['list', 'date'])
     .execute();
   const unseenListAndDateTuples = listAndDateTuples.filter(
@@ -86,42 +100,54 @@ export async function scrapeMessages() {
     const slug = `${list}/${date}`;
 
     try {
+      const t1 = new Date().getTime();
       const messageIds = await fetchMessageUrls(list, date);
-      const total = messageIds.length;
+      const t2 = new Date().getTime();
+      console.log(
+        `Fetched ${messageIds.length} message IDs from ${slug} in time ${
+          t2 - t1
+        }ms`
+      );
+
+      const seenMessageIds = await db
+        .selectFrom('messages')
+        .select('id')
+        .where('id', 'in', messageIds)
+        .execute()
+        .then((rows) => rows.map((row) => row.id));
+      const unseenMessageIds = messageIds.filter(
+        (messageId) => !seenMessageIds.includes(messageId)
+      );
+
+      const total = unseenMessageIds.length;
       let inserted = 0;
-      let skipped = 0;
       let errors = 0;
 
       console.log(`Scraping ${total} messages from ${slug}`);
-      for (const messageId of messageIds) {
+      for (const messageId of unseenMessageIds) {
         try {
-          const existingMessage = await db
-            .selectFrom('messages')
-            .where('id', '=', messageId)
-            .executeTakeFirst();
-          if (!existingMessage) {
-            const message = await fetchMessage(messageId);
-            await db.insertInto('messages').values(message).execute();
-            console.log(`Scraped message ${messageId}`);
-            inserted += 1;
-          } else {
-            console.log(`Skipping message ${messageId}`);
-            skipped += 1;
-          }
+          const message = await fetchMessage(messageId);
+          await db.insertInto('messages').values(message).execute();
+          console.log(`Scraped message ${messageId}`);
+          inserted += 1;
         } catch (error) {
           await db
-            .insertInto('errorMessages')
+            .insertInto('messagesScrapeErrors')
             .values({ id: messageId })
             .execute();
           errors += 1;
           console.log(`Error scraping message ${messageId}: ${error}`);
         }
       }
+      const t3 = new Date().getTime();
+      console.log(
+        `Scraped ${total} messages from ${slug} in time ${t3 - t2}ms`
+      );
 
-      await db.insertInto('scrapeLogs').values(tuple).execute();
+      await db.insertInto('messagesScrapeLogs').values(tuple).execute();
 
       console.log(
-        `Scraped ${inserted} messages from ${slug} (${skipped} skipped, ${errors} errors)`
+        `Scraped ${inserted} messages from ${slug} (${errors} errors)`
       );
       console.log();
     } catch (error) {

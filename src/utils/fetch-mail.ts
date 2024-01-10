@@ -93,12 +93,12 @@ async function getThreadsFromMessageIds(messageIds: string[]) {
 
 // Vector search
 export async function searchThreadsVector(query: string) {
-  const score = sql`cos_dist(text_embedding('BAAI/bge-small-en', subject), body_embedding)`;
+  const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_embedding)`;
   const messageIdsAndScores = await db
     .selectFrom('messages')
     .select(['id', score.as('score')])
     .orderBy(
-      sql`text_embedding('BAAI/bge-small-en', ${query}) <=> body_embedding`
+      sql`text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}) <=> body_embedding`
     )
     .limit(20)
     .execute();
@@ -147,7 +147,7 @@ async function getThreadsFromMessageIdAndPreviews(
       (data) => data.threadId === thread.id
     )!;
 
-    const count = otherThreadData.count || 1;
+    const count = (otherThreadData.count as number) || 1;
 
     // preview is the first preview we can find
     const preview = (otherThreadData.messageIds as string[])

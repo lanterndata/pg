@@ -7,8 +7,9 @@ create table docs (
   id serial primary key,
   branch text not null,
   path text not null,
+  title text not null,
   body text not null,
-  body_tsvector tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(body, ''))) STORED,
+  body_tsvector tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(body, ''))) STORED
 );
 
 create unique index docs_path_branch_idx on docs (path, branch);

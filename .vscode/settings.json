@@ -4,7 +4,7 @@
   "editor.detectIndentation": false,
   "editor.tabSize": 2,
   "editor.codeActionsOnSave": {
-    "source.fixAll": true
+    "source.fixAll": "explicit"
   },
   "eslint.codeActionsOnSave.mode": "problems",
   "eslint.workingDirectories": [{ "mode": "auto" }],

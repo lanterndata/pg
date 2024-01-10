@@ -1,6 +1,6 @@
 -- migrate:up
 
-create table scrape_logs (
+create table messages_scrape_errors (
   list text,
   date text,
   completed_at timestamptz not null default now(),
@@ -22,7 +22,7 @@ create index idx_messages_ts on messages(ts);
 create index idx_messages_in_reply_to on messages(in_reply_to);
 create index idx_messages_lists on messages using gin(lists);
 
-create table error_messages (
+create table messages_scrape_logs (
   id text primary key
 );
 

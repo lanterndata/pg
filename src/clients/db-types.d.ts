@@ -6,8 +6,20 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
-export interface ErrorMessages {
-  id: string;
+export interface Docs {
+  body: string;
+  bodyTsvector: Generated<string | null>;
+  branch: string;
+  id: Generated<number>;
+  path: string;
+  title: string;
+}
+
+export interface DocsChunks {
+  chunkContent: string;
+  docId: number;
+  id: Generated<number>;
+  ordinality: number;
 }
 
 export interface Messages {
@@ -24,14 +36,22 @@ export interface Messages {
   ts: Timestamp;
 }
 
-export interface SchemaMigrations {
-  version: string;
+export interface MessagesScrapeErrors {
+  id: string;
+  idEmbedding: number[] | null;
+  idEmbeddingV2: number[] | null;
 }
 
-export interface ScrapeLogs {
+export interface MessagesScrapeLogs {
   completedAt: Generated<Timestamp>;
   date: string;
+  dateEmbedding: number[] | null;
+  dateEmbeddingV2: number[] | null;
   list: string;
+}
+
+export interface SchemaMigrations {
+  version: string;
 }
 
 export interface Threads {
@@ -40,9 +60,11 @@ export interface Threads {
 }
 
 export interface DB {
-  errorMessages: ErrorMessages;
+  docs: Docs;
+  docsChunks: DocsChunks;
   messages: Messages;
+  messagesScrapeErrors: MessagesScrapeErrors;
+  messagesScrapeLogs: MessagesScrapeLogs;
   schemaMigrations: SchemaMigrations;
-  scrapeLogs: ScrapeLogs;
   threads: Threads;
 }
