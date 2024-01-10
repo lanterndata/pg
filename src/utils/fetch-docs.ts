@@ -3,14 +3,14 @@ import db from '@/clients/db';
 import { sql } from 'kysely';
 
 export async function searchDocsVector(query: string) {
-  const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_embedding)`;
+  const score = sql`cos_dist(text_embedding('BAAI/bge-base-en', ${query}), body_embedding)`;
   const docs = await db
     .selectFrom('docs')
     .select(score.as('score'))
     .select('id')
     .select('title')
     .orderBy(
-      sql`text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}) <=> body_embedding`
+      sql`text_embedding('BAAI/bge-base-en', ${query}) <=> body_embedding`
     )
     .limit(20)
     .execute();

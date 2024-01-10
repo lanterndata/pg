@@ -64,16 +64,25 @@ export async function getThreadMessages(threadId: string) {
   return messages;
 }
 
-async function getThreadsFromMessageIds(messageIds: string[]) {
-  if (messageIds.length === 0) {
+async function getThreadsFromMessageIds(
+  messageIdsAndScores: { id: string; score: unknown }[]
+) {
+  if (messageIdsAndScores.length === 0) {
     return [];
   }
+  const messageIds = messageIdsAndScores.map((row) => row.id);
   const counts = await db
     .selectFrom('threads')
     .select('threadId')
     .select((eb) => eb.fn.count('messageId').as('count'))
     .where('messageId', 'in', messageIds)
     .groupBy('threadId')
+    .execute();
+  const threadIdsToMessageIds = await db
+    .selectFrom('threads')
+    .select('threadId')
+    .select('messageId')
+    .where('messageId', 'in', messageIds)
     .execute();
   const threadIds = counts.map((count) => count.threadId);
   const threads = await db
@@ -88,6 +97,16 @@ async function getThreadsFromMessageIds(messageIds: string[]) {
     count:
       (counts.find((count) => count.threadId === thread.id)?.count as number) ||
       1,
+    score: Math.max(
+      ...threadIdsToMessageIds
+        .filter((row) => row.threadId === thread.id)
+        .map(
+          (row) =>
+            messageIdsAndScores.find(
+              (messageIdsAndScore) => messageIdsAndScore.id === row.messageId
+            )?.score as number
+        )
+    ),
   }));
 }
 
@@ -96,29 +115,22 @@ export async function searchThreadsVector(
   query: string,
   orderBy: 'relevance' | 'latest'
 ) {
-  const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_embedding)`;
+  const score = sql`cos_dist(text_embedding('BAAI/bge-large-en', ${query}), body_embedding)`;
   const messageIdsAndScores = await db
     .selectFrom('messages')
     .select('id')
     .select(score.as('score'))
     .orderBy(
-      sql`text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}) <=> body_embedding`
+      sql`text_embedding('BAAI/bge-large-en', ${query}) <=> body_embedding`
     )
     .limit(20)
     .execute();
-  const messageIds = messageIdsAndScores.map((row) => row.id);
-  const messages = await getThreadsFromMessageIds(messageIds);
-  const messagesWithScores = messages.map((message) => ({
-    ...message,
-    score: messageIdsAndScores.find((row) => row.id === message.id)?.score,
-  }));
+  const threads = await getThreadsFromMessageIds(messageIdsAndScores);
 
   if (orderBy === 'relevance') {
-    return messagesWithScores.sort(
-      (a, b) => (a.score as number) - (b.score as number)
-    );
+    return threads.sort((a, b) => (a.score as number) - (b.score as number));
   }
-  return messagesWithScores;
+  return threads;
 }
 
 async function getThreadsFromMessageIdAndPreviews(
