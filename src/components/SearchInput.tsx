@@ -14,7 +14,7 @@ const SearchInput = ({ value, setValue }: SearchInputProps) => (
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />
-    <HiMagnifyingGlass className='mr-2' />
+    <HiMagnifyingGlass className='ml-1' />
   </div>
 );
 

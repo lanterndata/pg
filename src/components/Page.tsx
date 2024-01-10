@@ -17,7 +17,7 @@ const Page = ({ list }: PageProps) => {
       list={activeList}
       getThreads={getThreads}
       getThreadMessages={getThreadMessages}
-      searchThreads={searchThreadsText}
+      searchThreads={searchThreadsVector}
     />
   );
 };

@@ -92,7 +92,10 @@ async function getThreadsFromMessageIds(messageIds: string[]) {
 }
 
 // Vector search
-export async function searchThreadsVector(query: string) {
+export async function searchThreadsVector(
+  query: string,
+  orderBy: 'relevance' | 'latest'
+) {
   const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_embedding)`;
   const messageIdsAndScores = await db
     .selectFrom('messages')
@@ -164,7 +167,10 @@ async function getThreadsFromMessageIdAndPreviews(
 }
 
 // Text search
-export async function searchThreadsText(query: string) {
+export async function searchThreadsText(
+  query: string,
+  orderBy: 'relevance' | 'latest'
+) {
   const querySql = sql`ts_headline('english', body, plainto_tsquery('english', ${query}))`;
   const messageIdAndPreviews = await db
     .selectFrom('messages')
