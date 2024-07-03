@@ -1,8 +1,5 @@
 -- migrate:up
 
-alter table scrape_logs rename to messages_scrape_logs;
-alter table error_messages rename to messages_scrape_errors;
-
 create table docs (
   id serial primary key,
   branch text not null,
@@ -27,6 +24,3 @@ create index docs_chunks_doc_id_idx on docs_chunks (doc_id);
 
 drop table docs_chunks;
 drop table docs;
-
-alter table messages_scrape_logs rename to scrape_logs;
-alter table messages_scrape_errors rename to error_messages;

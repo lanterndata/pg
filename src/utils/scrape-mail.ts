@@ -1,157 +1,143 @@
-import axios from 'axios';
-import * as cheerio from 'cheerio';
-import { getListAndDateTuples } from './constants';
 import db from '@/clients/db';
-import _ from 'lodash';
+import axios from 'axios';
+import { simpleParser } from 'mailparser';
 
-const BASE = 'https://www.postgresql.org';
+const MIN_YEAR = 2024;
+const MIN_MONTH = 7;
 
-// Sample main URL: https://www.postgresql.org/list/pgsql-admin/2023-12/
-// Sample secondary URL: https://www.postgresql.org/list/pgsql-bugs/since/202305230900
-async function fetchMessageUrls(list: string, date: string) {
-  const urls: string[] = [];
+const MAX_YEAR = 2024;
+const MAX_MONTH = 7;
 
-  urls.push(`${BASE}/list/${list}/${date}/`);
-  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}060000`);
-  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}110000`);
-  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}160000`);
-  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}210000`);
-  urls.push(`${BASE}/list/${list}/since/${date.replace('-', '')}260000`);
+const LISTS = [
+  'pgsql-general',
+  'pgsql-interfaces',
+  'pgsql-novice',
+  'pgsql-performance',
+  'pgsql-sql',
+  'pgsql-docs',
+  'pgsql-hackers',
+];
 
-  const messageIds: string[] = [];
+function splitText(text: string) {
+  const emailStartPattern = /From\s[^@]+@lists\.postgresql\.org\s.+\s\d{4}/g;
 
-  for (const url of urls) {
-    const response = await axios.get(url);
-    const $ = cheerio.load(response.data);
+  // Array to store the split emails
+  let emails = [];
 
-    const messageLinks = $('a[href^="/message-id/"]');
-    messageIds.push(
-      ...messageLinks
-        .map((index, element) => $(element).attr('href'))
-        .get()
-        .map((messageUrls) => messageUrls.split('/').pop()!)
-    );
+  // Find all email start positions
+  const emailStartMatches = [
+    ...text.matchAll(emailStartPattern),
+    { index: text.length },
+  ];
+
+  // Loop through the matches and split the text
+  for (let i = 0; i < emailStartMatches.length - 1; i++) {
+    let startIndex = emailStartMatches[i].index!;
+    let endIndex = emailStartMatches[i + 1].index!;
+    emails.push(text.substring(startIndex, endIndex).trim());
   }
-  return _.uniq(messageIds);
+
+  return emails;
 }
 
-// Sample URL: https://www.postgresql.org/message-id/34a83d6f68c2d513a88acb40cdc581c43586a746.camel%40cybertec.at
-async function fetchMessage(id: string) {
-  const url = `${BASE}/message-id/${id}`;
-  const response = await axios.get(url);
-  const $ = cheerio.load(response.data);
+async function parseMessage(text: string) {
+  const parsed = await simpleParser(text);
 
-  const lists = $('.listname a')
-    .map((index, element) => $(element).text())
-    .get();
-
-  const to = $('tr th:contains("To:") + td')
-    .text()
-    .split(',')
-    .map((address) => address.trim());
-
-  const subject = $('tr th:contains("Subject:") + td').text().trim();
-
-  const body = $('.message-content').html()!.trim();
-
-  const ts = $('tr th:contains("Date:") + td').text().trim();
-
-  const from = $('tr th:contains("From:") + td').text().trim();
-
-  const cc = $('tr th:contains("Cc:") + td')
-    .text()
-    .split(',')
-    .map((email) => email.trim())
-    .filter((email) => !!email);
-
-  const inResponseToHeader = $('h3.messages:contains("In response to")');
-  const messageResponses = inResponseToHeader.next('.message-responses');
-  const messageIds = messageResponses
-    .find('a')
-    .map((index, element) => $(element).attr('href')!.split('/').pop())
-    .get();
-  const inReplyTo = messageIds[0];
+  const id = parsed.messageId!;
+  const subject = parsed.subject!;
+  const body = parsed.text!;
+  const fromAddress = parsed.from!.value[0].address!;
+  const fromName = parsed.from!.value[0].name!;
+  const ts = parsed.date!;
+  const parsedTo = parsed.to!;
+  const parsedToList = Array.isArray(parsedTo)
+    ? parsedTo.map((ao) => ao.value).flat()
+    : parsedTo.value;
+  const toAddresses = parsedToList.map((a) => a.address!);
+  const toNames = parsedToList.map((a) => a.name!);
+  const parsedCc = parsed.cc!;
+  const parsedCcList = Array.isArray(parsedCc)
+    ? parsedCc.map((ao) => ao.value).flat()
+    : parsedCc.value;
+  const ccAddresses = parsedCcList.map((a) => a.address!);
+  const ccNames = parsedCcList.map((a) => a.name!);
+  const inReplyTo = parsed.inReplyTo;
+  const lists = parsed.headerLines
+    .filter((l) => l.key === 'list-Id')
+    .map((l) => l.line.substring(9).split('.')[0].substring(1));
 
   return {
     id,
     lists,
-    to,
+    toAddresses,
+    toNames,
     subject,
     body,
     ts,
-    from,
-    cc,
+    fromAddress,
+    fromName,
+    ccAddresses,
+    ccNames,
     inReplyTo,
   };
 }
 
-export async function scrapeMessages() {
-  const listAndDateTuples = getListAndDateTuples();
-  const seenListAndDateTuples = await db
-    .selectFrom('messagesScrapeLogs')
-    .select(['list', 'date'])
-    .execute();
-  const unseenListAndDateTuples = listAndDateTuples.filter(
-    (t1) => !seenListAndDateTuples.some((t2) => _.isEqual(t1, t2))
-  );
+async function parseMessages(text: string) {
+  const texts = splitText(text);
+  return await Promise.all(texts.map(parseMessage));
+}
 
-  for (const tuple of unseenListAndDateTuples) {
-    const { list, date } = tuple;
-    const slug = `${list}/${date}`;
+// Sample URL: https://www.postgresql.org/list/pgsql-general/mbox/pgsql-general.202407
+async function fetchListDateMessages(list: string, date: string) {
+  const url = `https://www.postgresql.org/list/${list}/mbox/${list}.${date}`;
 
-    try {
-      const t1 = new Date().getTime();
-      const messageIds = await fetchMessageUrls(list, date);
-      const t2 = new Date().getTime();
-      console.log(
-        `Fetched ${messageIds.length} message IDs from ${slug} in time ${
-          t2 - t1
-        }ms`
-      );
+  // Fetch data from URL
+  const data: string = await axios.get(url).then((response) => response.data);
 
-      const seenMessageIds = await db
-        .selectFrom('messages')
-        .select('id')
-        .where('id', 'in', messageIds)
-        .execute()
-        .then((rows) => rows.map((row) => row.id));
-      const unseenMessageIds = messageIds.filter(
-        (messageId) => !seenMessageIds.includes(messageId)
-      );
+  // Parse messages from data
+  const messages = await parseMessages(data);
 
-      const total = unseenMessageIds.length;
-      let inserted = 0;
-      let errors = 0;
+  // Insert messages
+  await db.insertInto('messages').values(messages).execute();
 
-      console.log(`Scraping ${total} messages from ${slug}`);
-      for (const messageId of unseenMessageIds) {
-        try {
-          const message = await fetchMessage(messageId);
-          await db.insertInto('messages').values(message).execute();
-          console.log(`Scraped message ${messageId}`);
-          inserted += 1;
-        } catch (error) {
-          await db
-            .insertInto('messagesScrapeErrors')
-            .values({ id: messageId })
-            .execute();
-          errors += 1;
-          console.log(`Error scraping message ${messageId}: ${error}`);
-        }
+  // Insert list and date into cache so we don't fetch it again
+  await db.insertInto('messagesLogs').values({ list, date }).execute();
+}
+
+async function fetchMissingListDates(list: string) {
+  const attemptedDates = await db
+    .selectFrom('messagesLogs')
+    .where('list', '=', list)
+    .select('date')
+    .execute()
+    .then((rows) => rows.map((row) => row.date));
+  const missingDates: string[] = [];
+  for (let year = MIN_YEAR; year <= MAX_YEAR; year--) {
+    const startMonth = year === MAX_YEAR ? MAX_MONTH : 12;
+    const endMonth = year === MIN_YEAR ? MIN_MONTH : 1;
+    for (let month = startMonth; month <= endMonth; month--) {
+      const date = `${year}${month.toString().padStart(2, '0')}`;
+      if (!attemptedDates.includes(date)) {
+        missingDates.push(date);
       }
-      const t3 = new Date().getTime();
-      console.log(
-        `Scraped ${total} messages from ${slug} in time ${t3 - t2}ms`
-      );
-
-      await db.insertInto('messagesScrapeLogs').values(tuple).execute();
-
-      console.log(
-        `Scraped ${inserted} messages from ${slug} (${errors} errors)`
-      );
-      console.log();
-    } catch (error) {
-      console.log(`Error scraping ${slug}: ${error}`);
     }
   }
+  return missingDates;
 }
+
+export async function fetchListMessages(list: string) {
+  const dates = await fetchMissingListDates(list);
+  for (const date of dates) {
+    await fetchListDateMessages(list, date);
+    console.log(`Fetched messages for ${list} on ${date}`);
+  }
+}
+
+async function fetchMessages() {
+  for (const list of LISTS) {
+    await fetchListMessages(list);
+    console.log(`Fetched messages for ${list}`);
+  }
+}
+
+fetchMessages();

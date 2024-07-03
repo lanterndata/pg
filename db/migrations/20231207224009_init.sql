@@ -1,9 +1,8 @@
 -- migrate:up
 
-create table messages_scrape_errors (
-  list text,
-  date text,
-  completed_at timestamptz not null default now(),
+create table messages_logs (
+  list text not null,
+  date text not null,
   primary key (list, date)
 );
 
@@ -14,17 +13,18 @@ create table messages (
   ts timestamptz not null,
   subject text not null,
   body text not null,
-  "from" text not null,
-  "to" text[] not null,
-  cc text[] not null
+  body_tsvector tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(body, ''))) STORED,
+  from_address text not null,
+  from_name text not null,
+  to_addresses text[] not null,
+  to_names text[] not null,
+  cc_addresses text[] not null,
+  cc_names text[] not null
 );
 create index idx_messages_ts on messages(ts);
 create index idx_messages_in_reply_to on messages(in_reply_to);
 create index idx_messages_lists on messages using gin(lists);
-
-create table messages_scrape_logs (
-  id text primary key
-);
+create index idx_messages_body_tsvector on messages using gin(body_tsvector);
 
 create recursive view threads (
   thread_id,
@@ -52,6 +52,5 @@ create recursive view threads (
 
 -- migrate:down
 
-drop table scrape_logs;
 drop table messages;
 drop view threads;
