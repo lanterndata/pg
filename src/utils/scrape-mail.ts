@@ -112,10 +112,10 @@ async function fetchMissingListDates(list: string) {
     .execute()
     .then((rows) => rows.map((row) => row.date));
   const missingDates: string[] = [];
-  for (let year = MIN_YEAR; year <= MAX_YEAR; year--) {
+  for (let year = MIN_YEAR; year >= MAX_YEAR; year--) {
     const startMonth = year === MAX_YEAR ? MAX_MONTH : 12;
     const endMonth = year === MIN_YEAR ? MIN_MONTH : 1;
-    for (let month = startMonth; month <= endMonth; month--) {
+    for (let month = startMonth; month >= endMonth; month--) {
       const date = `${year}${month.toString().padStart(2, '0')}`;
       if (!attemptedDates.includes(date)) {
         missingDates.push(date);
@@ -128,6 +128,7 @@ async function fetchMissingListDates(list: string) {
 export async function fetchListMessages(list: string) {
   const dates = await fetchMissingListDates(list);
   for (const date of dates) {
+    console.log(`Fetching messages for ${list} on ${date}`);
     await fetchListDateMessages(list, date);
     console.log(`Fetched messages for ${list} on ${date}`);
   }
@@ -135,6 +136,7 @@ export async function fetchListMessages(list: string) {
 
 async function fetchMessages() {
   for (const list of LISTS) {
+    console.log(`Fetching messages for ${list}`);
     await fetchListMessages(list);
     console.log(`Fetched messages for ${list}`);
   }
