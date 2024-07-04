@@ -1,5 +1,9 @@
 # PG Mailing List
 
+## Getting started
+
+- Run `git clone --recurse-submodules lanterndata/pg`
+
 ## Populate data
 
 - Use `pgsql-lists-offline` to download the mailing list archives to a local `data` directory. Note the dependencies on `parallel` and `curl`.
