@@ -231,16 +231,17 @@ export interface LanternTasks {
 }
 
 export interface Messages {
-  body: string;
+  body: string | null;
   bodyTsvector: Generated<string | null>;
   ccAddresses: string[];
   ccNames: string[];
   fromAddress: string;
   fromName: string;
+  html: string | null;
   id: string;
   inReplyTo: string | null;
   lists: string[] | null;
-  subject: string;
+  subject: string | null;
   toAddresses: string[];
   toNames: string[];
   ts: Timestamp;
