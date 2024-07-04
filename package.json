@@ -9,7 +9,8 @@
     "lint": "next lint",
     "codegen": "yarn kysely-codegen --camel-case --out-file ./src/clients/db-types.d.ts",
     "migrate": "yarn dbmate up && yarn codegen",
-    "scrape": "tsx ./src/utils/scrape-mail.ts"
+    "scrape": "tsx ./src/utils/scrape-mail.ts",
+    "archives": "pgsql-lists-offline/pgsql-lists-offline.sh"
   },
   "dependencies": {
     "@types/pg": "^8.10.9",
@@ -36,6 +37,7 @@
     "@types/sanitize-html": "^2.9.5",
     "autoprefixer": "^10.0.1",
     "dbmate": "^2.8.0",
+    "dotenv": "^16.4.5",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "kysely-codegen": "^0.11.0",
