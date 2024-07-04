@@ -16,12 +16,12 @@ const db = new Kysely<DB>({
 
 const LISTS = [
   'pgsql-general',
-  // 'pgsql-interfaces',
-  // 'pgsql-novice',
-  // 'pgsql-performance',
-  // 'pgsql-sql',
-  // 'pgsql-docs',
-  // 'pgsql-hackers',
+  'pgsql-interfaces',
+  'pgsql-novice',
+  'pgsql-performance',
+  'pgsql-sql',
+  'pgsql-docs',
+  'pgsql-hackers',
 ];
 
 function splitText(text: string) {
