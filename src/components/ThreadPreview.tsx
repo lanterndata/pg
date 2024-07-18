@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import sanitizeHtml from 'sanitize-html';
 
 function formatDateAsYYYYMMDD(date: Date) {
   const year = date.getFullYear();
@@ -12,8 +11,9 @@ interface ThreadPreviewProps {
   list?: string;
   thread: {
     id: string;
-    from: string;
-    subject: string;
+    fromName: string;
+    fromAddress: string;
+    subject: string | null;
     ts: Date;
     count: number;
     score?: number;
@@ -51,7 +51,7 @@ const ThreadPreview = ({
       </div>
     )}
     <div className='flex mb-1 text-sm'>
-      <p>{thread.from}</p>
+      <p>{thread.fromName || thread.fromAddress}</p>
       {thread.count > 1 && (
         <p className='ml-2 text-stone-400'>{thread.count}</p>
       )}
@@ -64,10 +64,9 @@ const ThreadPreview = ({
           'text-sm mt-2',
           isActive ? 'text-stone-200' : 'text-stone-500'
         )}
-        dangerouslySetInnerHTML={{
-          __html: sanitizeHtml(thread.preview),
-        }}
-      />
+      >
+        {thread.preview}
+      </p>
     )}
   </div>
 );

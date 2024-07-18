@@ -2,12 +2,6 @@
 import db from '@/clients/db';
 import { sql } from 'kysely';
 
-function parseNameFromString(nameAndEmail: string) {
-  const regex = /(.+?)\s*(?:<.+>)?$/;
-  const match = nameAndEmail.match(regex);
-  return match ? match[1].replace(/"/g, '') : '';
-}
-
 async function getThreadsFromThreadIds(threadIds: string[]) {
   if (threadIds.length === 0) {
     return [];
@@ -28,7 +22,6 @@ async function getThreadsFromThreadIds(threadIds: string[]) {
     .execute();
   return messages.map((message) => ({
     ...message,
-    from: parseNameFromString(message.from),
     count:
       (counts.find((count) => count.threadId === message.id)
         ?.count as number) || 1,
@@ -87,13 +80,12 @@ async function getThreadsFromMessageIds(
   const threadIds = counts.map((count) => count.threadId);
   const threads = await db
     .selectFrom('messages')
-    .select(['id', 'subject', 'ts', 'from'])
+    .select(['id', 'subject', 'ts', 'fromName', 'fromAddress'])
     .where('id', 'in', threadIds)
     .orderBy('ts', 'desc')
     .execute();
   return threads.map((thread) => ({
     ...thread,
-    from: parseNameFromString(thread.from),
     count:
       (counts.find((count) => count.threadId === thread.id)?.count as number) ||
       1,
@@ -164,7 +156,7 @@ async function getThreadsFromMessageIdAndPreviews(
   const threadIds = threadData.map((data) => data.threadId);
   const unprocessedThreads = await db
     .selectFrom('messages')
-    .select(['id', 'subject', 'ts', 'from'])
+    .select(['id', 'subject', 'ts', 'fromAddress', 'fromName'])
     .where('id', 'in', threadIds)
     .orderBy('ts', 'desc')
     .execute();
@@ -188,7 +180,6 @@ async function getThreadsFromMessageIdAndPreviews(
 
     return {
       ...thread,
-      from: parseNameFromString(thread.from),
       count,
       preview,
       score,

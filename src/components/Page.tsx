@@ -10,7 +10,7 @@ interface PageProps {
 }
 
 const Page = ({ list }: PageProps) => {
-  const activeList = list || 'pgsql-admin';
+  const activeList = list || 'pgsql-general';
   return (
     <PageClient
       list={activeList}

@@ -1,6 +1,3 @@
-import { useEffect, useRef } from 'react';
-import sanitizeHtml from 'sanitize-html';
-
 function formatDate(date: Date) {
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
@@ -15,10 +12,11 @@ function formatDate(date: Date) {
 
 export interface Message {
   id: string;
-  from: string;
-  subject: string;
+  fromName: string;
+  fromAddress: string;
+  subject: string | null;
   ts: Date;
-  body: string;
+  body: string | null;
   inReplyTo: string | null;
 }
 
@@ -32,82 +30,33 @@ function startsWithQuote(line: string) {
   return l.startsWith('&gt;') || l.startsWith('>');
 }
 
-function isAuthorLine(line: string) {
-  return line.trim().endsWith(':');
-}
-
-function isAuthorParagraph(paragraph: HTMLParagraphElement) {
-  const lines = paragraph.innerHTML.split('<br>');
+function isLineLight(line: string) {
   return (
-    isAuthorLine(lines[0]) &&
-    lines.length > 1 &&
-    lines
-      .slice(1)
-      .map(startsWithQuote)
-      .every((x) => x)
+    (line && line.includes('________________________________')) ||
+    line.includes('Sent from my iPhone') ||
+    line.includes('Sent from my Galaxy') ||
+    line.startsWith('-- ') ||
+    startsWithQuote(line)
   );
 }
 
-function modifyParagraph(paragraph: HTMLParagraphElement) {
-  const lines = paragraph.innerHTML.split('<br>');
-  for (let i = 0; i < lines.length; i++) {
-    if (startsWithQuote(lines[i]) || isAuthorLine(lines[i])) {
-      lines[i] = `<span class='text-stone-400'>${lines[i].trim()}</span>`;
-    }
-  }
-
-  // Join the lines back into a single string and update the paragraph's innerHTML
-  paragraph.innerHTML = lines.join('<br>');
-}
-
 const MessageView = ({ message, messages }: MessageViewProps) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-
   const replies = messages.filter((m) => m.inReplyTo === message.id);
-  const html = sanitizeHtml(message.body);
-
-  useEffect(() => {
-    if (contentRef.current) {
-      const paragraphs = contentRef.current.getElementsByTagName('p');
-      let isQuote = false;
-      for (const paragraph of paragraphs) {
-        if (isQuote) {
-          paragraph.classList.add('text-stone-400');
-        } else if (
-          paragraph.textContent?.includes('________________________________') ||
-          paragraph.textContent?.includes('Sent from my iPhone') ||
-          paragraph.textContent?.includes('Sent from my Galaxy') ||
-          paragraph.textContent?.startsWith('-- ')
-        ) {
-          paragraph.classList.add('text-stone-400');
-          isQuote = true;
-        }
-
-        // Handle p tag that starts with >
-        else if (
-          paragraph.textContent &&
-          startsWithQuote(paragraph.textContent)
-        ) {
-          // paragraph.classList.add('text-stone-400');
-          modifyParagraph(paragraph);
-        }
-
-        // Handle p tag that starts with On [date] [author] wrote: and then has &gt with <br>'s in between
-        else if (isAuthorParagraph(paragraph)) {
-          paragraph.classList.add('text-stone-400');
-        }
-      }
-    }
-  }, [html]);
-
   return (
     <div className='ml-8'>
       <div className='bg-slate-50 p-4 rounded border border-slate-300 shadow drop-shadow w-full'>
         <div className='flex justify-between mb-4 text-stone-400 text-sm'>
-          <p>{message.from}</p>
+          <p>{message.fromName}</p>
           <p>{formatDate(message.ts)}</p>
         </div>
-        <div ref={contentRef} dangerouslySetInnerHTML={{ __html: html }} />
+        {message.body?.split('\n').map((line, index) => (
+          <p
+            key={message.id + '-' + index}
+            className={isLineLight(line) ? 'text-stone-400' : ''}
+          >
+            {line.trim() === '' ? '\u00A0' : line}
+          </p>
+        ))}
       </div>
 
       {replies.length > 0 && (

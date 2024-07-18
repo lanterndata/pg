@@ -9,8 +9,9 @@ import OrderBy from './OrderBy';
 
 interface Thread {
   id: string;
-  from: string;
-  subject: string;
+  fromName: string;
+  fromAddress: string;
+  subject: string | null;
   ts: Date;
   count: number;
 }
