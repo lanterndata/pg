@@ -49,14 +49,17 @@ const MessageView = ({ message, messages }: MessageViewProps) => {
           <p>{message.fromName}</p>
           <p>{formatDate(message.ts)}</p>
         </div>
-        {message.body?.split('\n').map((line, index) => (
-          <p
-            key={message.id + '-' + index}
-            className={isLineLight(line) ? 'text-stone-400' : ''}
-          >
-            {line.trim() === '' ? '\u00A0' : line}
-          </p>
-        ))}
+        {message.body
+          ?.trim()
+          .split('\n')
+          .map((line, index) => (
+            <p
+              key={message.id + '-' + index}
+              className={isLineLight(line) ? 'text-stone-400' : ''}
+            >
+              {line.trim() === '' ? '\u00A0' : line}
+            </p>
+          ))}
       </div>
 
       {replies.length > 0 && (
