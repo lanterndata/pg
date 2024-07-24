@@ -22,6 +22,7 @@
     "mailparser": "^3.7.1",
     "next": "14.0.4",
     "pg": "^8.11.3",
+    "pg-promise": "^11.9.1",
     "react": "^18",
     "react-dom": "^18",
     "react-icons": "^4.12.0"

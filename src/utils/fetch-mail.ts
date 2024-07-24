@@ -1,25 +1,36 @@
 'use server';
 import db from '@/clients/db';
+import pgp from '@/clients/pgp';
 import { sql } from 'kysely';
 
 async function getThreadsFromThreadIds(threadIds: string[]) {
   if (threadIds.length === 0) {
     return [];
   }
-  const counts = await db
-    .selectFrom('threads')
-    .select('threadId')
-    .select((eb) => eb.fn.count('messageId').as('count'))
-    .where('threadId', 'in', threadIds)
-    .groupBy('threadId')
-    .execute();
+  const countsQuery = `
+    SELECT
+      thread_id,
+      COUNT(*)
+    FROM
+      threads
+    WHERE
+      thread_id IN ($1:csv)
+    GROUP BY
+      thread_id
+  `;
+  const counts = await pgp.many(countsQuery, [threadIds]);
   const messageIds = counts.map((count) => count.threadId);
-  const messages = await db
-    .selectFrom('messages')
-    .selectAll()
-    .where('id', 'in', messageIds)
-    .orderBy('ts', 'desc')
-    .execute();
+  const messagesQuery = `
+    SELECT
+      *
+    FROM
+      messages
+    WHERE
+      id IN ($1:csv)
+    ORDER BY
+      ts DESC
+  `;
+  const messages = await pgp.many(messagesQuery, [messageIds]);
   return messages.map((message) => ({
     ...message,
     count:
@@ -29,15 +40,22 @@ async function getThreadsFromThreadIds(threadIds: string[]) {
 }
 
 export async function getThreads(list: string, page: number) {
-  const threadIds = await db
-    .selectFrom('messages')
-    .select('id')
-    .where('inReplyTo', 'is', null)
-    .where((eb) => eb(eb.val(list), '=', eb.fn.any('lists')))
-    .orderBy('ts', 'desc')
-    .offset(page * 20)
-    .limit(20)
-    .execute()
+  const query = `
+      SELECT
+        id
+      FROM
+        messages
+      WHERE
+        in_reply_to IS NULL
+        AND $1 = ANY(lists)
+      ORDER BY
+        ts DESC
+      OFFSET
+        20 * $2
+      LIMIT 20
+    `;
+  const threadIds = await pgp
+    .many(query, [list, page])
     .then((rows) => rows.map((row) => row.id));
   return await getThreadsFromThreadIds(threadIds);
 }
