@@ -51,14 +51,14 @@ const SettingsButton = ({ hasQuery }: SettingsButtonProps) => {
           <ListItem
             id='vector'
             name='Vector'
-            checked={sortBy === 'vector'}
-            onChange={() => setSortBy('vector')}
+            checked={sortBy === 'vector search'}
+            onChange={() => setSortBy('vector search')}
           />
           <ListItem
             id='text'
             name='Text'
-            checked={sortBy === 'text'}
-            onChange={() => setSortBy('text')}
+            checked={sortBy === 'Postgres FTS'}
+            onChange={() => setSortBy('Postgres FTS')}
           />
         </ul>
       </Modal>

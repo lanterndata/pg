@@ -216,8 +216,8 @@ async function getThreadsFromMessageIdAndPreviews(
   return threads;
 }
 
-// Text search
-export async function searchThreadsText(
+// Postgres full text search
+export async function searchThreadsFTS(
   list: string | undefined,
   query: string,
   orderBy: 'relevance' | 'latest'
@@ -252,13 +252,13 @@ export async function searchThreads(
   orderBy: 'relevance' | 'latest',
   mode?: SortByType
 ) {
-  if (mode === 'text') {
-    return await searchThreadsText(list, query, orderBy);
-  } else if (mode === 'vector') {
+  if (mode === 'Postgres FTS') {
+    return await searchThreadsFTS(list, query, orderBy);
+  } else if (mode === 'vector search') {
     return await searchThreadsVector(list, query, orderBy);
   }
   if (query.split(' ').length < 4) {
-    return await searchThreadsText(list, query, orderBy);
+    return await searchThreadsFTS(list, query, orderBy);
   } else {
     return await searchThreadsVector(list, query, orderBy);
   }
