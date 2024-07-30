@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Source_Sans_3 } from 'next/font/google';
 import './globals.css';
+import { Provider } from 'jotai';
 
 const font = Source_Sans_3({ subsets: ['latin'] });
 
@@ -15,8 +16,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='en'>
-      <body className={font.className}>{children}</body>
-    </html>
+    <Provider>
+      <html lang='en'>
+        <body className={font.className}>{children}</body>
+      </html>
+    </Provider>
   );
 }

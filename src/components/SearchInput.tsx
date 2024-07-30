@@ -1,5 +1,5 @@
 'use client';
-import { HiMagnifyingGlass } from 'react-icons/hi2';
+import { FiSearch } from 'react-icons/fi';
 
 interface SearchInputProps {
   value: string;
@@ -14,7 +14,7 @@ const SearchInput = ({ value, setValue }: SearchInputProps) => (
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />
-    <HiMagnifyingGlass className='ml-1' />
+    <FiSearch className='ml-1' />
   </div>
 );
 

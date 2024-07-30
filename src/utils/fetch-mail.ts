@@ -2,6 +2,7 @@
 import db from '@/clients/db';
 import pgp from '@/clients/pgp';
 import { sql } from 'kysely';
+import { SortByType } from './types';
 
 async function getThreadsFromThreadIds(threadIds: string[]) {
   if (threadIds.length === 0) {
@@ -238,8 +239,14 @@ export async function searchThreadsText(
 
 export async function searchThreads(
   query: string,
-  orderBy: 'relevance' | 'latest'
+  orderBy: 'relevance' | 'latest',
+  mode?: SortByType
 ) {
+  if (mode === 'text') {
+    return await searchThreadsText(query, orderBy);
+  } else if (mode === 'vector') {
+    return await searchThreadsVector(query, orderBy);
+  }
   if (query.split(' ').length < 4) {
     return await searchThreadsText(query, orderBy);
   } else {

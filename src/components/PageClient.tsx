@@ -6,6 +6,9 @@ import ThreadView from './ThreadView';
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
 import OrderBy from './OrderBy';
+import { SortByType } from '@/utils/types';
+import { useAtom } from 'jotai';
+import { sortByAtom } from '@/utils/atoms';
 
 interface Thread {
   id: string;
@@ -22,7 +25,8 @@ interface PageProps {
   getThreadMessages: (threadId: string) => Promise<Message[]>;
   searchThreads: (
     query: string,
-    orderBy: 'relevance' | 'latest'
+    orderBy: 'relevance' | 'latest',
+    mode: SortByType
   ) => Promise<Thread[]>;
 }
 
@@ -38,11 +42,13 @@ const PageClient = ({
   const [threadId, setThreadId] = useState('');
   const [page, setPage] = useState(0);
 
+  const [searchMode] = useAtom(sortByAtom);
   const [searchValue, setSearchValue] = useState('');
   const [orderBy, setOrderBy] = useState<'relevance' | 'latest'>('relevance');
   const debouncedSearchValue = useDebounce(searchValue, 500);
   const shouldPerformSearch = debouncedSearchValue.length > 2;
 
+  // Fetch threads on load
   useEffect(() => {
     if (!shouldPerformSearch) {
       setLoading(true);
@@ -54,23 +60,33 @@ const PageClient = ({
     }
   }, [list, page, getThreads, shouldPerformSearch]);
 
+  // Fetch threads on search
   useEffect(() => {
     if (shouldPerformSearch) {
       setLoading(true);
-      searchThreads(debouncedSearchValue, orderBy).then((threads) => {
-        setThreads(threads);
-        if (threads.length > 0) setThreadId(threads[0].id);
-        setLoading(false);
-      });
+      searchThreads(debouncedSearchValue, orderBy, searchMode).then(
+        (threads) => {
+          setThreads(threads);
+          if (threads.length > 0) setThreadId(threads[0].id);
+          setLoading(false);
+        }
+      );
     }
-  }, [debouncedSearchValue, orderBy, shouldPerformSearch, searchThreads]);
+  }, [
+    debouncedSearchValue,
+    orderBy,
+    shouldPerformSearch,
+    searchThreads,
+    searchMode,
+  ]);
 
   return (
     <div className='flex'>
       <Navbar
-        activeList={searchValue ? '' : list}
+        activeList={list}
         searchValue={searchValue}
         setSearchValue={setSearchValue}
+        hasQuery={shouldPerformSearch}
       />
 
       <main className='h-screen w-full white grid grid-cols-4'>
