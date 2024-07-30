@@ -1,3 +1,4 @@
+import { Thread } from '@/utils/types';
 import classNames from 'classnames';
 
 function formatDateAsYYYYMMDD(date: Date) {
@@ -9,16 +10,7 @@ function formatDateAsYYYYMMDD(date: Date) {
 
 interface ThreadPreviewProps {
   list?: string;
-  thread: {
-    id: string;
-    fromName: string;
-    fromAddress: string;
-    subject: string | null;
-    ts: Date;
-    count: number;
-    score?: number;
-    preview?: string;
-  };
+  thread: Thread;
   onClick: () => void;
   isActive?: boolean;
 }

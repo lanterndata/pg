@@ -5,7 +5,7 @@ import SearchInput from './SearchInput';
 import SettingsButton from './SettingsButton';
 
 interface NavbarProps {
-  activeList: string;
+  activeList: undefined | string;
   searchValue: string;
   setSearchValue: (value: string) => void;
   hasQuery: boolean;
@@ -33,7 +33,7 @@ const Navbar = ({
           {cl.category.toUpperCase()}
         </p>
         {cl.lists.map((l) => (
-          <Link key={l.list} href={'/' + l.list}>
+          <Link key={l.list} href={l.list === activeList ? '/' : '/' + l.list}>
             <div
               className={classNames(
                 'py-1 px-5',

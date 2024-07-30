@@ -6,24 +6,16 @@ import ThreadView from './ThreadView';
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@uidotdev/usehooks';
 import OrderBy from './OrderBy';
-import { SortByType } from '@/utils/types';
+import { SortByType, Thread } from '@/utils/types';
 import { useAtom } from 'jotai';
 import { sortByAtom } from '@/utils/atoms';
 
-interface Thread {
-  id: string;
-  fromName: string;
-  fromAddress: string;
-  subject: string | null;
-  ts: Date;
-  count: number;
-}
-
 interface PageProps {
-  list: string;
-  getThreads: (list: string, page: number) => Promise<Thread[]>;
+  list: string | undefined;
+  getThreads: (list: string | undefined, page: number) => Promise<Thread[]>;
   getThreadMessages: (threadId: string) => Promise<Message[]>;
   searchThreads: (
+    list: string | undefined,
     query: string,
     orderBy: 'relevance' | 'latest',
     mode: SortByType
@@ -64,7 +56,7 @@ const PageClient = ({
   useEffect(() => {
     if (shouldPerformSearch) {
       setLoading(true);
-      searchThreads(debouncedSearchValue, orderBy, searchMode).then(
+      searchThreads(list, debouncedSearchValue, orderBy, searchMode).then(
         (threads) => {
           setThreads(threads);
           if (threads.length > 0) setThreadId(threads[0].id);
@@ -73,6 +65,7 @@ const PageClient = ({
       );
     }
   }, [
+    list,
     debouncedSearchValue,
     orderBy,
     shouldPerformSearch,
@@ -92,7 +85,11 @@ const PageClient = ({
       <main className='h-screen w-full white grid grid-cols-4'>
         <div className='bg-slate-900 px-2 pt-2 pb-4 flex flex-col gap-y-2 overflow-y-scroll'>
           <p className='text-stone-50 mt-5 mb-3'>
-            {shouldPerformSearch ? 'Query: ' + searchValue : '# ' + list}
+            {shouldPerformSearch
+              ? 'Query: ' + searchValue
+              : list
+              ? '# ' + list
+              : 'All mailing lists'}
           </p>
           {searchValue && (
             <div className='grid grid-cols-2 gap-x-2 mb-2 text-stone-400'>
@@ -116,7 +113,7 @@ const PageClient = ({
             threads.map((thread) => (
               <ThreadPreview
                 key={thread.id}
-                list={searchValue ? list : undefined}
+                list={!list ? thread.lists?.[0] : undefined}
                 thread={thread}
                 isActive={threadId === thread.id}
                 onClick={() => setThreadId(thread.id)}

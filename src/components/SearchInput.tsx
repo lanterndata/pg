@@ -1,5 +1,5 @@
 'use client';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiX } from 'react-icons/fi';
 
 interface SearchInputProps {
   value: string;
@@ -9,12 +9,12 @@ interface SearchInputProps {
 const SearchInput = ({ value, setValue }: SearchInputProps) => (
   <div className='bg-slate-800 w-full rounded py-1.5 border border-slate-600 px-2 flex items-center'>
     <input
-      className='bg-slate-800 w-full focus:outline-none placeholder-stone-400 text-stone-100'
+      className='bg-slate-800 w-full focus:outline-none placeholder-stone-400 text-stone-100 mr-1'
       placeholder='Search mailing lists'
       value={value}
       onChange={(e) => setValue(e.target.value)}
     />
-    <FiSearch className='ml-1' />
+    {value ? <FiX onClick={() => setValue('')} /> : <FiSearch />}
   </div>
 );
 

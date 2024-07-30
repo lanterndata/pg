@@ -2,7 +2,7 @@
 import db from '@/clients/db';
 import pgp from '@/clients/pgp';
 import { sql } from 'kysely';
-import { SortByType } from './types';
+import { SortByType, Thread } from './types';
 
 async function getThreadsFromThreadIds(threadIds: string[]) {
   if (threadIds.length === 0) {
@@ -40,7 +40,7 @@ async function getThreadsFromThreadIds(threadIds: string[]) {
   }));
 }
 
-export async function getThreads(list: string, page: number) {
+export async function getThreads(list: string | undefined, page: number) {
   const query = `
       SELECT
         id
@@ -48,15 +48,15 @@ export async function getThreads(list: string, page: number) {
         messages
       WHERE
         in_reply_to IS NULL
-        AND $1 = ANY(lists)
+        ${list ? `AND $2 = ANY(lists)` : ''}
       ORDER BY
         ts DESC
       OFFSET
-        20 * $2
+        20 * $1
       LIMIT 20
     `;
   const threadIds = await pgp
-    .many(query, [list, page])
+    .many(query, list ? [page, list] : [page])
     .then((rows) => rows.map((row) => row.id));
   return await getThreadsFromThreadIds(threadIds);
 }
@@ -99,7 +99,7 @@ async function getThreadsFromMessageIds(
   const threadIds = counts.map((count) => count.threadId);
   const threads = await db
     .selectFrom('messages')
-    .select(['id', 'subject', 'ts', 'fromName', 'fromAddress'])
+    .select(['id', 'subject', 'ts', 'fromName', 'fromAddress', 'lists'])
     .where('id', 'in', threadIds)
     .orderBy('ts', 'desc')
     .execute();
@@ -123,19 +123,24 @@ async function getThreadsFromMessageIds(
 
 // Vector search
 export async function searchThreadsVector(
+  list: string | undefined,
   query: string,
   orderBy: 'relevance' | 'latest'
 ) {
   const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_dense_vector)`;
-  const messageIdsAndScores = await db
+  let builder = await db
     .selectFrom('messages')
     .select('id')
-    .select(score.as('score'))
+    .select(score.as('score'));
+  if (list) {
+    builder = builder.where(sql`${list} = ANY(lists)`);
+  }
+  builder = builder
     .orderBy(
       sql`text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}) <=> body_dense_vector`
     )
-    .limit(20)
-    .execute();
+    .limit(20);
+  const messageIdsAndScores = await builder.execute();
   const threads = await getThreadsFromMessageIds(messageIdsAndScores);
 
   if (orderBy === 'relevance') {
@@ -175,7 +180,7 @@ async function getThreadsFromMessageIdAndPreviews(
   const threadIds = threadData.map((data) => data.threadId);
   const unprocessedThreads = await db
     .selectFrom('messages')
-    .select(['id', 'subject', 'ts', 'fromAddress', 'fromName'])
+    .select(['id', 'subject', 'ts', 'fromAddress', 'fromName', 'lists'])
     .where('id', 'in', threadIds)
     .orderBy('ts', 'desc')
     .execute();
@@ -213,9 +218,10 @@ async function getThreadsFromMessageIdAndPreviews(
 
 // Text search
 export async function searchThreadsText(
+  list: string | undefined,
   query: string,
   orderBy: 'relevance' | 'latest'
-) {
+): Promise<Thread[]> {
   const querySql = sql`ts_headline('english', body, websearch_to_tsquery('english', ${query}))`;
   const rankSql = sql`ts_rank_cd(body_tsvector, websearch_to_tsquery('english', ${query}))`;
 
@@ -225,6 +231,9 @@ export async function searchThreadsText(
     .select(querySql.as('preview'))
     .select(rankSql.as('score'))
     .where(sql`body_tsvector @@ websearch_to_tsquery('english', ${query})`);
+  if (list) {
+    builder = builder.where(sql`${list} = ANY(lists)`);
+  }
   builder =
     orderBy === 'relevance'
       ? builder.orderBy(rankSql, 'desc')
@@ -238,18 +247,19 @@ export async function searchThreadsText(
 }
 
 export async function searchThreads(
+  list: string | undefined,
   query: string,
   orderBy: 'relevance' | 'latest',
   mode?: SortByType
 ) {
   if (mode === 'text') {
-    return await searchThreadsText(query, orderBy);
+    return await searchThreadsText(list, query, orderBy);
   } else if (mode === 'vector') {
-    return await searchThreadsVector(query, orderBy);
+    return await searchThreadsVector(list, query, orderBy);
   }
   if (query.split(' ').length < 4) {
-    return await searchThreadsText(query, orderBy);
+    return await searchThreadsText(list, query, orderBy);
   } else {
-    return await searchThreadsVector(query, orderBy);
+    return await searchThreadsVector(list, query, orderBy);
   }
 }
