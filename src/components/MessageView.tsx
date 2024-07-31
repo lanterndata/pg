@@ -43,7 +43,7 @@ function isLineLight(line: string) {
 const MessageView = ({ message, messages }: MessageViewProps) => {
   const replies = messages.filter((m) => m.inReplyTo === message.id);
   return (
-    <div className='ml-8'>
+    <div className='ml-8 text-sm'>
       <div className='bg-slate-50 p-4 rounded border border-slate-300 shadow drop-shadow w-full'>
         <div className='flex justify-between mb-4 text-stone-400 text-sm'>
           <p>{message.fromName}</p>
