@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+b {
+  font-weight: medium;
+}
+em {
+  font-style: default;
+  font-weight: medium;
+}

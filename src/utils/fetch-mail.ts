@@ -40,42 +40,6 @@ async function getThreadsFromThreadIds(threadIds: string[]) {
   }));
 }
 
-export async function getThreads(list: string | undefined, page: number) {
-  const query = `
-      SELECT
-        id
-      FROM
-        messages
-      WHERE
-        in_reply_to IS NULL
-        ${list ? `AND $2 = ANY(lists)` : ''}
-      ORDER BY
-        ts DESC
-      OFFSET
-        20 * $1
-      LIMIT 20
-    `;
-  const threadIds = await pgp
-    .many(query, list ? [page, list] : [page])
-    .then((rows) => rows.map((row) => row.id));
-  return await getThreadsFromThreadIds(threadIds);
-}
-
-export async function getThreadMessages(threadId: string) {
-  const messageIds = await db
-    .selectFrom('threads')
-    .select('messageId')
-    .where('threadId', '=', threadId)
-    .execute()
-    .then((rows) => rows.map((row) => row.messageId));
-  const messages = await db
-    .selectFrom('messages')
-    .selectAll()
-    .where('id', 'in', messageIds)
-    .execute();
-  return messages;
-}
-
 async function getThreadsFromMessageIds(
   messageIdsAndScores: { id: string; score: unknown }[]
 ) {
@@ -119,34 +83,6 @@ async function getThreadsFromMessageIds(
         )
     ),
   }));
-}
-
-// Vector search
-export async function searchThreadsVector(
-  list: string | undefined,
-  query: string,
-  orderBy: 'relevance' | 'latest'
-) {
-  const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_dense_vector)`;
-  let builder = await db
-    .selectFrom('messages')
-    .select('id')
-    .select(score.as('score'));
-  if (list) {
-    builder = builder.where(sql`${list} = ANY(lists)`);
-  }
-  builder = builder
-    .orderBy(
-      sql`text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}) <=> body_dense_vector`
-    )
-    .limit(20);
-  const messageIdsAndScores = await builder.execute();
-  const threads = await getThreadsFromMessageIds(messageIdsAndScores);
-
-  if (orderBy === 'relevance') {
-    return threads.sort((a, b) => (a.score as number) - (b.score as number));
-  }
-  return threads;
 }
 
 async function getThreadsFromMessageIdAndPreviews(
@@ -216,8 +152,70 @@ async function getThreadsFromMessageIdAndPreviews(
   return threads;
 }
 
-// Postgres full text search
-export async function searchThreadsFTS(
+export async function getThreads(list: string | undefined, page: number) {
+  const query = `
+      SELECT
+        id
+      FROM
+        messages
+      WHERE
+        in_reply_to IS NULL
+        ${list ? `AND $2 = ANY(lists)` : ''}
+      ORDER BY
+        ts DESC
+      OFFSET
+        20 * $1
+      LIMIT 20
+    `;
+  const threadIds = await pgp
+    .many(query, list ? [page, list] : [page])
+    .then((rows) => rows.map((row) => row.id));
+  return await getThreadsFromThreadIds(threadIds);
+}
+
+export async function getThreadMessages(threadId: string) {
+  const messageIds = await db
+    .selectFrom('threads')
+    .select('messageId')
+    .where('threadId', '=', threadId)
+    .execute()
+    .then((rows) => rows.map((row) => row.messageId));
+  const messages = await db
+    .selectFrom('messages')
+    .selectAll()
+    .where('id', 'in', messageIds)
+    .execute();
+  return messages;
+}
+
+async function searchThreadsVector(
+  list: string | undefined,
+  query: string,
+  orderBy: 'relevance' | 'latest'
+) {
+  const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_dense_vector)`;
+  let builder = await db
+    .selectFrom('messages')
+    .select('id')
+    .select(score.as('score'));
+  if (list) {
+    builder = builder.where(sql`${list} = ANY(lists)`);
+  }
+  builder = builder
+    .orderBy(
+      sql`text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}) <=> body_dense_vector`
+    )
+    .limit(20);
+  const messageIdsAndScores = await builder.execute();
+  const threads = await getThreadsFromMessageIds(messageIdsAndScores);
+
+  if (orderBy === 'relevance') {
+    return threads.sort((a, b) => (a.score as number) - (b.score as number));
+  }
+  return threads;
+}
+
+async function searchThreadsFTS(
   list: string | undefined,
   query: string,
   orderBy: 'relevance' | 'latest'
@@ -246,6 +244,31 @@ export async function searchThreadsFTS(
   );
 }
 
+async function searchThreadsElastic(
+  list: string | undefined,
+  query: string,
+  orderBy: 'relevance' | 'latest'
+) {
+  const messageQuery = `
+    SELECT
+      messages.id,
+      zdb.highlight(ctid, 'body') AS preview,
+      zdb.score(ctid) AS score
+    FROM
+      messages
+    WHERE
+      messages ==> $1
+      ${list ? 'AND $2 = ANY(lists)' : ''}
+    ORDER BY
+      ${orderBy === 'relevance' ? 'score' : 'ts'} DESC
+    LIMIT 20`;
+  const messageIds = await pgp.manyOrNone(
+    messageQuery,
+    list ? [query, list] : query
+  );
+  return await getThreadsFromMessageIdAndPreviews(messageIds, orderBy);
+}
+
 export async function searchThreads(
   list: string | undefined,
   query: string,
@@ -256,9 +279,14 @@ export async function searchThreads(
     return await searchThreadsFTS(list, query, orderBy);
   } else if (mode === 'vector search') {
     return await searchThreadsVector(list, query, orderBy);
+  } else if (mode === 'ElasticSearch') {
+    return await searchThreadsElastic(list, query, orderBy);
   }
-  if (query.split(' ').length < 4) {
+  const tokenCount = query.split(' ').length;
+  if (tokenCount < 3) {
     return await searchThreadsFTS(list, query, orderBy);
+  } else if (tokenCount < 10) {
+    return await searchThreadsElastic(list, query, orderBy);
   } else {
     return await searchThreadsVector(list, query, orderBy);
   }

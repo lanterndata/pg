@@ -1,5 +1,6 @@
 import { Thread } from '@/utils/types';
 import classNames from 'classnames';
+import DOMPurify from 'isomorphic-dompurify';
 
 function formatDateAsYYYYMMDD(date: Date) {
   const year = date.getFullYear();
@@ -31,15 +32,17 @@ const ThreadPreview = ({
     )}
     onClick={onClick}
   >
-    {thread.score && (
+    {(list || thread.score) && (
       <div
         className={classNames(
           'text-xs mb-1 flex justify-between',
           isActive ? 'text-white' : 'text-stone-300'
         )}
       >
-        <div>#{list}</div>
-        <div>Score: {(thread.score || 1).toPrecision(3)}</div>
+        <div>{list ? '#' + list : ''}</div>
+        <div>
+          {thread.score ? 'Score: ' + (thread.score || 1).toPrecision(3) : ''}
+        </div>
       </div>
     )}
     <div className='flex mb-1 text-sm'>
@@ -56,9 +59,8 @@ const ThreadPreview = ({
           'text-sm mt-2',
           isActive ? 'text-stone-200' : 'text-stone-500'
         )}
-      >
-        {thread.preview}
-      </p>
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(thread.preview) }}
+      />
     )}
   </div>
 );
