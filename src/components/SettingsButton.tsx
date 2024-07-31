@@ -60,6 +60,12 @@ const SettingsButton = ({ hasQuery }: SettingsButtonProps) => {
             checked={sortBy === 'Postgres FTS'}
             onChange={() => setSortBy('Postgres FTS')}
           />
+          <ListItem
+            id='elastic'
+            name='Elastic'
+            checked={sortBy === 'ElasticSearch'}
+            onChange={() => setSortBy('ElasticSearch')}
+          />
         </ul>
       </Modal>
       <div
