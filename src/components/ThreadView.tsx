@@ -49,14 +49,14 @@ const ThreadView = ({
   const href = `https://www.postgresql.org/message-id/${threadId}`;
 
   return (
-    <div className='pr-12 pl-4 pt-8 pb-8'>
-      <div className='ml-8 mb-8'>
+    <div className='px-12 pt-8 pb-8'>
+      <div className='mb-8'>
         <h1 className='text-2xl font-medium'>{message.subject}</h1>
         <div className='mt-2 w-full h-0.5 bg-slate-300' />
       </div>
 
-      <MessageView message={message} messages={messages} />
-      <div className='ml-8 mt-12 text-sm font-medium'>
+      <MessageView message={message} messages={messages} layer={0} />
+      <div className='mt-12 text-sm font-medium'>
         Source:{' '}
         <Link href={href} className='text-slate-500'>
           {href}

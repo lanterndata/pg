@@ -2,15 +2,22 @@ import { CATEGORY_LISTS } from '@/utils/constants';
 import classNames from 'classnames';
 import Link from 'next/link';
 import SearchInput from './SearchInput';
+import SettingsButton from './SettingsButton';
 
 interface NavbarProps {
-  activeList: string;
+  activeList: undefined | string;
   searchValue: string;
   setSearchValue: (value: string) => void;
+  hasQuery: boolean;
 }
 
-const Navbar = ({ activeList, searchValue, setSearchValue }: NavbarProps) => (
-  <nav className='h-screen w-80 bg-slate-950 text-stone-300 py-8 overflow-y-scroll'>
+const Navbar = ({
+  activeList,
+  searchValue,
+  setSearchValue,
+  hasQuery,
+}: NavbarProps) => (
+  <nav className='h-screen w-80 bg-slate-950 text-stone-300 py-8 overflow-y-scroll flex flex-col'>
     <div className='px-5'>
       <Link href='/'>
         <p className='font-semibold text-sm'>PG.LANTERN.DEV</p>
@@ -25,25 +32,24 @@ const Navbar = ({ activeList, searchValue, setSearchValue }: NavbarProps) => (
         <p className='font-semibold mb-1 text-stone-500 px-5'>
           {cl.category.toUpperCase()}
         </p>
-        {cl.lists.map((l) => {
-          const isActive = l.list === activeList;
-          return (
-            <Link key={l.list} href={'/' + l.list}>
-              <div
-                className={classNames(
-                  'py-1 px-5',
-                  isActive
-                    ? 'bg-slate-700 text-stone-100'
-                    : 'hover:bg-slate-900'
-                )}
-              >
-                # {l.list}
-              </div>
-            </Link>
-          );
-        })}
+        {cl.lists.map((l) => (
+          <Link key={l.list} href={l.list === activeList ? '/' : '/' + l.list}>
+            <div
+              className={classNames(
+                'py-1 px-5',
+                l.list === activeList
+                  ? 'bg-slate-700 text-stone-100'
+                  : 'hover:bg-slate-900'
+              )}
+            >
+              # {l.list}
+            </div>
+          </Link>
+        ))}
       </div>
     ))}
+
+    <SettingsButton hasQuery={hasQuery} />
   </nav>
 );
 

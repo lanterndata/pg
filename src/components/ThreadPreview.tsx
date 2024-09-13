@@ -1,4 +1,6 @@
+import { Thread } from '@/utils/types';
 import classNames from 'classnames';
+import DOMPurify from 'isomorphic-dompurify';
 
 function formatDateAsYYYYMMDD(date: Date) {
   const year = date.getFullYear();
@@ -9,16 +11,7 @@ function formatDateAsYYYYMMDD(date: Date) {
 
 interface ThreadPreviewProps {
   list?: string;
-  thread: {
-    id: string;
-    fromName: string;
-    fromAddress: string;
-    subject: string | null;
-    ts: Date;
-    count: number;
-    score?: number;
-    preview?: string;
-  };
+  thread: Thread;
   onClick: () => void;
   isActive?: boolean;
 }
@@ -32,41 +25,42 @@ const ThreadPreview = ({
   <div
     id={'preview-' + thread.id}
     className={classNames(
-      'px-4 py-4 rounded border shadow-sm border-slate-600 cursor-pointer',
+      'px-4 py-3 rounded border shadow-sm border-slate-600 cursor-pointer',
       isActive
         ? 'bg-slate-600 text-stone-100'
         : 'bg-slate-800 text-stone-400 hover:bg-slate-700 hover:text-stone-300'
     )}
     onClick={onClick}
   >
-    {thread.score && (
+    {(list || thread.score) && (
       <div
         className={classNames(
           'text-xs mb-1 flex justify-between',
           isActive ? 'text-white' : 'text-stone-300'
         )}
       >
-        <div>#{list}</div>
-        <div>Score: {(thread.score || 1).toPrecision(3)}</div>
+        <div>{list ? '#' + list : ''}</div>
+        <div>
+          {thread.score ? 'Score: ' + (thread.score || 1).toPrecision(3) : ''}
+        </div>
       </div>
     )}
-    <div className='flex mb-1 text-sm'>
+    <div className='flex mb-1 text-xs'>
       <p>{thread.fromName || thread.fromAddress}</p>
       {thread.count > 1 && (
         <p className='ml-2 text-stone-400'>{thread.count}</p>
       )}
       <p className='ml-auto'>{formatDateAsYYYYMMDD(thread.ts)}</p>
     </div>
-    <p className='font-medium'>{thread.subject}</p>
+    <p className='font-medium text-sm'>{thread.subject}</p>
     {thread.preview && (
       <p
         className={classNames(
-          'text-sm mt-2',
+          'text-xs mt-2',
           isActive ? 'text-stone-200' : 'text-stone-500'
         )}
-      >
-        {thread.preview}
-      </p>
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(thread.preview) }}
+      />
     )}
   </div>
 );
