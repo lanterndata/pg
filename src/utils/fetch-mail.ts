@@ -244,31 +244,6 @@ async function searchThreadsFTS(
   );
 }
 
-async function searchThreadsElastic(
-  list: string | undefined,
-  query: string,
-  orderBy: 'relevance' | 'latest'
-) {
-  const messageQuery = `
-    SELECT
-      messages.id,
-      zdb.highlight(ctid, 'body') AS preview,
-      zdb.score(ctid) AS score
-    FROM
-      messages
-    WHERE
-      messages ==> $1
-      ${list ? 'AND $2 = ANY(lists)' : ''}
-    ORDER BY
-      ${orderBy === 'relevance' ? 'score' : 'ts'} DESC
-    LIMIT 20`;
-  const messageIds = await pgp.manyOrNone(
-    messageQuery,
-    list ? [query, list] : query
-  );
-  return await getThreadsFromMessageIdAndPreviews(messageIds, orderBy);
-}
-
 export async function searchThreads(
   list: string | undefined,
   query: string,
@@ -279,14 +254,10 @@ export async function searchThreads(
     return await searchThreadsFTS(list, query, orderBy);
   } else if (mode === 'vector search') {
     return await searchThreadsVector(list, query, orderBy);
-  } else if (mode === 'ElasticSearch') {
-    return await searchThreadsElastic(list, query, orderBy);
   }
   const tokenCount = query.split(' ').length;
   if (tokenCount < 3) {
     return await searchThreadsFTS(list, query, orderBy);
-  } else if (tokenCount < 10) {
-    return await searchThreadsElastic(list, query, orderBy);
   } else {
     return await searchThreadsVector(list, query, orderBy);
   }

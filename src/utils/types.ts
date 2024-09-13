@@ -1,8 +1,4 @@
-export type SortByType =
-  | 'default'
-  | 'vector search'
-  | 'Postgres FTS'
-  | 'ElasticSearch';
+export type SortByType = 'default' | 'vector search' | 'Postgres FTS';
 
 export interface Thread {
   id: string;
