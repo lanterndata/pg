@@ -14,3 +14,36 @@
 ```bash
 yarn dbmate new <migration-name>
 ```
+
+## pgsql-lists-offline
+
+Source: <https://github.com/wsdookadr/pgsql-lists-offline>
+
+Downloads mailing list archives for PostgreSQL, PostGIS and pgRouting.
+
+The mailing list archives that will be downloaded are in the [[https://en.wikipedia.org/wiki/Mbox][mbox format]] and can be read
+using any mbox-aware email client (for example [[http://www.mutt.org/][mutt]] ).
+
+### Dependencies
+
+```sh
+sudo apt-get install parallel curl
+```
+
+### Usage
+
+```sh
+./pgsql-lists-offline.sh -l
+```
+
+To download a list (for example pgsql-general):
+
+```sh
+./pgsql-lists-offline.sh -g pgsql-general
+```
+
+To download a list for a particular month:
+
+```sh
+./pgsql-lists-offline.sh -g pgsql-general -m 202403
+```
