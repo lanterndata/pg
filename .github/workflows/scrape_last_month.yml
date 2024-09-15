@@ -1,0 +1,17 @@
+name: Scrape Last Month
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  monthly_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run scrape last month script
+        run: ./scripts/scrape-recent.sh
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
