@@ -96,7 +96,12 @@ async function fetchListDateMessages(list: string, date: string) {
   const file = `./data/${list}/${list}.${date}`;
 
   const text = await fs.readFile(file, 'utf8');
-  const messages = await parseMessages(list, text);
+  const sanitizedText = text.replace(/\0/g, ''); // Removes null bytes
+  const messages = await parseMessages(list, sanitizedText);
+
+  if (messages.length === 0) {
+    return 0;
+  }
 
   // Insert messages
   await db
