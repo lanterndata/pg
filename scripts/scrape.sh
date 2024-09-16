@@ -1,20 +1,14 @@
 #!/bin/bash
 
-# Function to get the previous month in YYYYMM format
-get_previous_month() {
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS (BSD date)
-    date -v-1m +%Y%m
-  else
-    # Linux (GNU date)
-    date --date="$(date +%Y-%m-15) -1 month" +%Y%m
-  fi
+# Function to get the current month in YYYYMM format
+get_current_month() {
+  date +%Y%m
 }
 
-# Determine if --last-month flag is passed
+# Determine if --current-month flag is passed
 month=""
-if [ "$1" == "--last-month" ]; then
-  month=$(get_previous_month)
+if [ "$1" == "--current-month" ]; then
+  month=$(get_current_month)
 fi
 
 # List of groups
