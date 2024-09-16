@@ -193,7 +193,7 @@ async function searchThreadsVector(
   query: string,
   orderBy: 'relevance' | 'latest'
 ) {
-  const score = sql`cos_dist(text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}), body_dense_vector)`;
+  const score = sql`cos_dist(text_embedding('BAAI/bge-m3', ${query}), body_dense_vector)`;
   let builder = await db
     .selectFrom('messages')
     .select('id')
@@ -202,9 +202,7 @@ async function searchThreadsVector(
     builder = builder.where(sql`${list} = ANY(lists)`);
   }
   builder = builder
-    .orderBy(
-      sql`text_embedding('jinaai/jina-embeddings-v2-base-en', ${query}) <=> body_dense_vector`
-    )
+    .orderBy(sql`text_embedding('BAAI/bge-m3', ${query}) <=> body_dense_vector`)
     .limit(20);
   const messageIdsAndScores = await builder.execute();
   const threads = await getThreadsFromMessageIds(messageIdsAndScores);
