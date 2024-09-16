@@ -1,4 +1,5 @@
 require('dotenv').config({ path: '.env.local' });
+import minimist from 'minimist';
 import { promises as fs } from 'fs';
 import { simpleParser } from 'mailparser';
 import { CamelCasePlugin, Kysely, PostgresDialect, sql } from 'kysely';
@@ -15,13 +16,16 @@ const db = new Kysely<DB>({
 });
 
 const LISTS = [
+  'pgsql-admin',
+  'pgsql-announce',
+  'pgsql-bugs',
+  'pgsql-docs',
   'pgsql-general',
-  'pgsql-interfaces',
+  'pgsql-hackers',
   'pgsql-novice',
   'pgsql-performance',
   'pgsql-sql',
-  'pgsql-docs',
-  'pgsql-hackers',
+  'pgsql-testers',
 ];
 
 function splitText(text: string) {
@@ -46,50 +50,61 @@ function splitText(text: string) {
   return emails;
 }
 
+function sanitize(text: string | undefined | null) {
+  if (text) return text.replace(/\0/g, '');
+  return text;
+}
+
 async function parseMessage(list: string, text: string) {
   const parsed = await simpleParser(text);
+  try {
+    const id = parsed.messageId!;
+    const subject = parsed.subject!;
+    const body = sanitize(parsed.text);
+    const html = sanitize(parsed.html || null);
+    const fromAddress = parsed.from!.value[0].address!;
+    const fromName = parsed.from!.value[0].name!;
+    const ts = parsed.date!;
+    const parsedTo = parsed.to!;
+    const parsedToList = Array.isArray(parsedTo)
+      ? parsedTo.map((ao) => ao.value).flat()
+      : parsedTo?.value || [];
+    const toAddresses = parsedToList.map((a) => a.address!);
+    const toNames = parsedToList.map((a) => a.name!);
+    const parsedCc = parsed.cc!;
+    const parsedCcList = Array.isArray(parsedCc)
+      ? parsedCc.map((ao) => ao.value).flat()
+      : parsedCc?.value || [];
+    const ccAddresses = parsedCcList.map((a) => a.address!);
+    const ccNames = parsedCcList.map((a) => a.name!);
+    const inReplyTo = parsed.inReplyTo;
 
-  const id = parsed.messageId!;
-  const subject = parsed.subject!;
-  const body = parsed.text;
-  const html = parsed.html || null;
-  const fromAddress = parsed.from!.value[0].address!;
-  const fromName = parsed.from!.value[0].name!;
-  const ts = parsed.date!;
-  const parsedTo = parsed.to!;
-  const parsedToList = Array.isArray(parsedTo)
-    ? parsedTo.map((ao) => ao.value).flat()
-    : parsedTo?.value || [];
-  const toAddresses = parsedToList.map((a) => a.address!);
-  const toNames = parsedToList.map((a) => a.name!);
-  const parsedCc = parsed.cc!;
-  const parsedCcList = Array.isArray(parsedCc)
-    ? parsedCc.map((ao) => ao.value).flat()
-    : parsedCc?.value || [];
-  const ccAddresses = parsedCcList.map((a) => a.address!);
-  const ccNames = parsedCcList.map((a) => a.name!);
-  const inReplyTo = parsed.inReplyTo;
-
-  return {
-    id,
-    lists: [list],
-    toAddresses,
-    toNames,
-    subject,
-    body,
-    html,
-    ts,
-    fromAddress,
-    fromName,
-    ccAddresses,
-    ccNames,
-    inReplyTo,
-  };
+    return {
+      id,
+      lists: [list],
+      toAddresses,
+      toNames,
+      subject,
+      body,
+      html,
+      ts,
+      fromAddress,
+      fromName,
+      ccAddresses,
+      ccNames,
+      inReplyTo,
+    };
+  } catch (e) {
+    console.error(`Failed to parse message: ${JSON.stringify(text)}`);
+    return null;
+  }
 }
 
 async function parseMessages(list: string, text: string) {
   const texts = splitText(text);
-  return await Promise.all(texts.map((t) => parseMessage(list, t)));
+  return await Promise.all(texts.map((t) => parseMessage(list, t))).then(
+    (res) => res.filter((i) => i !== null)
+  );
 }
 
 async function fetchListDateMessages(list: string, date: string) {
@@ -109,7 +124,10 @@ async function fetchListDateMessages(list: string, date: string) {
     .values(messages)
     .onConflict((oc) =>
       oc.column('id').doUpdateSet((eb) => ({
-        lists: sql`array_cat(messages.lists, EXCLUDED.lists)`,
+        lists: sql`(
+          SELECT array_agg(DISTINCT elem)
+          FROM unnest(array_cat(messages.lists, EXCLUDED.lists)) AS elem
+        )`,
       }))
     )
     .execute();
@@ -161,6 +179,23 @@ export async function fetchListMessages(list: string) {
   }
 }
 
+async function fetchMonthMessages(month: string) {
+  for (const list of LISTS) {
+    console.log(`Fetching messages for ${list}`);
+    const availableDates = await listFilesInDirectory('./data/' + list).then(
+      (files) => files.map((file) => file.split('.')[1])
+    );
+    if (availableDates.includes(month)) {
+      console.log(`Fetching messages for ${list} on ${month}`);
+      const count = await fetchListDateMessages(list, month);
+      console.log(`Fetched ${count} messages for ${list} on ${month}`);
+    } else {
+      console.log(`No messages found for ${list} on ${month}`);
+    }
+    console.log(`Fetched messages for ${list}`);
+  }
+}
+
 async function fetchMessages() {
   for (const list of LISTS) {
     console.log(`Fetching messages for ${list}`);
@@ -169,4 +204,12 @@ async function fetchMessages() {
   }
 }
 
-fetchMessages();
+const args = minimist(process.argv.slice(2));
+const month = args.m || args.month;
+if (month) {
+  console.log(`Fetching messages for ${month}`);
+  fetchMonthMessages(month);
+} else {
+  console.log('Fetching messages');
+  fetchMessages();
+}

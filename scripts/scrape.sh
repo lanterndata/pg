@@ -31,19 +31,19 @@ groups=(
   pgsql-bugs
 )
 
+# Install dependencies, run migrations
+yarn install
+yarn dbmate up
+
 # Load all data into data/ folder
 if [ -z "$month" ]; then
   for group in "${groups[@]}"; do
     ./scripts/pgsql-lists-offline.sh -g "$group"
   done
+  yarn scrape
 else
   for group in "${groups[@]}"; do
     ./scripts/pgsql-lists-offline.sh -g "$group" -m "$month"
   done
+  yarn scrape -m "$month"
 fi
-
-# Load all data from data/ folder into Postgres URL
-# NOTE: Ensure that DATABASE_URL is set in .env.local or in the environment
-yarn install
-yarn dbmate up
-yarn scrape

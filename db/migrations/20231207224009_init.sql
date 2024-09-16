@@ -14,7 +14,7 @@ create table messages (
   subject text,
   html text,
   body text,
-  body_tsvector tsvector GENERATED ALWAYS AS (to_tsvector('english', coalesce(body, ''))) STORED,
+  body_tsvector tsvector GENERATED ALWAYS AS (to_tsvector('english', left(coalesce(body, ''), 100000))) STORED,
   from_address text not null,
   from_name text not null,
   to_addresses text[] not null,
