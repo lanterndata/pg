@@ -25,7 +25,6 @@ const LISTS = [
   'pgsql-novice',
   'pgsql-performance',
   'pgsql-sql',
-  'pgsql-testers',
 ];
 
 function splitText(text: string) {

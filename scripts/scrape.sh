@@ -19,7 +19,6 @@ groups=(
   pgsql-admin
   pgsql-novice
   pgsql-sql
-  pgsql-testers
   pgsql-announce
   pgsql-docs
   pgsql-bugs
