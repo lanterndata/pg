@@ -194,7 +194,7 @@ async function searchThreadsVector(
   orderBy: 'relevance' | 'latest'
 ) {
   const score = sql`cos_dist(text_embedding('BAAI/bge-small-en', ${query}), body_dense_vector)`;
-  let builder = await db
+  let builder = db
     .selectFrom('messages')
     .select('id')
     .select(score.as('score'));
