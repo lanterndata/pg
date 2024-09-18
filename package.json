@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "yarn codegen && next build",
     "start": "next start",
     "lint": "next lint",
     "codegen": "yarn kysely-codegen --camel-case --out-file ./src/clients/db-types.d.ts",
