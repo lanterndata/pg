@@ -24,6 +24,10 @@ With `DATABASE_URL` set in the environment:
 yarn dbmate up
 ```
 
+## Notes for local development
+
+The `body_dense_vector` column in `messages` was added and populated using the Lantern dashboard, and is not in the migration files.
+
 ## pgsql-lists-offline
 
 Source: <https://github.com/wsdookadr/pgsql-lists-offline>
