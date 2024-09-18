@@ -406,6 +406,13 @@ CREATE INDEX idx_messages_in_reply_to ON public.messages USING btree (in_reply_t
 
 
 --
+-- Name: idx_messages_in_reply_to_lists_ts; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_messages_in_reply_to_lists_ts ON public.messages USING btree (in_reply_to, ts DESC);
+
+
+--
 -- Name: idx_messages_lists; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -496,7 +503,4 @@ CREATE EVENT TRIGGER trigger_on_create_index_start ON ddl_command_start
 INSERT INTO public.schema_migrations (version) VALUES
     ('20231207224009'),
     ('20231212004442'),
-    ('20240131210318'),
-    ('20240305210319'),
-    ('20240827144120'),
-    ('20240903002257');
+    ('20240918045129');

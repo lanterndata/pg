@@ -15,6 +15,14 @@
 yarn dbmate new <migration-name>
 ```
 
+## Run migrations
+
+With `DATABASE_URL` set in the environment:
+
+```bash
+yarn dbmate up
+```
+
 ## pgsql-lists-offline
 
 Source: <https://github.com/wsdookadr/pgsql-lists-offline>

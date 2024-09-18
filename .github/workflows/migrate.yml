@@ -1,0 +1,17 @@
+name: Run Database Migrations
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  migrate:
+    name: Migrate Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run migrations
+        run: docker run --rm --network=host -v "$(pwd)/db:/db" amacneil/dbmate:2.11 --url "${{ secrets.DATABASE_URL }}" up

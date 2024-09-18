@@ -1,0 +1,46 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  test:
+    if: github.event.pull_request.draft == false
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Wait for DB
+        timeout-minutes: 1
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          until pg_isready -h localhost -p 5432 -U testuser; do
+            >&2 echo "Postgres is unavailable - sleeping"
+            sleep 1
+          done
+          echo "PostgreSQL is ready!"
+
+      - name: Run migrations
+        run: docker run --rm --network=host -v "$(pwd)/db:/db" amacneil/dbmate:2.11 --url "postgres://testuser:testpassword@localhost:5432/testdb?sslmode=disable" up
