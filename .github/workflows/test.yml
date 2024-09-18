@@ -44,3 +44,11 @@ jobs:
 
       - name: Run migrations
         run: docker run --rm --network=host -v "$(pwd)/db:/db" amacneil/dbmate:2.11 --url "postgres://testuser:testpassword@localhost:5432/testdb?sslmode=disable" up
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Run build
+        env:
+          DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb?sslmode=disable
+        run: yarn build
