@@ -203,12 +203,21 @@ async function fetchMessages() {
   }
 }
 
-const args = minimist(process.argv.slice(2));
-const month = args.m || args.month;
-if (month) {
-  console.log(`Fetching messages for ${month}`);
-  fetchMonthMessages(month);
-} else {
-  console.log('Fetching messages');
-  fetchMessages();
+async function updateMaterializedView() {
+  await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY messages;`.execute(db);
 }
+
+async function main() {
+  const args = minimist(process.argv.slice(2));
+  const month = args.m || args.month;
+  if (month) {
+    console.log(`Fetching messages for ${month}`);
+    await fetchMonthMessages(month);
+  } else {
+    console.log('Fetching messages');
+    await fetchMessages();
+  }
+  await updateMaterializedView();
+}
+
+main();
