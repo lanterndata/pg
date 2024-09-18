@@ -32,17 +32,14 @@ const ThreadPreview = ({
     )}
     onClick={onClick}
   >
-    {(list || thread.score) && (
+    {list && (
       <div
         className={classNames(
-          'text-xs mb-1 flex justify-between',
+          'text-xs mb-1',
           isActive ? 'text-white' : 'text-stone-300'
         )}
       >
-        <div>{list ? '#' + list : ''}</div>
-        <div>
-          {thread.score ? 'Score: ' + (thread.score || 1).toPrecision(3) : ''}
-        </div>
+        {list ? '#' + list : ''}
       </div>
     )}
     <div className='flex mb-1 text-xs'>
