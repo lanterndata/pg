@@ -6,8 +6,9 @@
 
 ## Populate data
 
-- Use `pgsql-lists-offline` to download the mailing list archives to a local `data` directory. Note the dependencies on `parallel` and `curl`.
-- Use `yarn scrape` to process the archives and populate a Postgres database. Note that the database connection string should be populated in `.env.local` as `DATABASE_URL`.
+- Use `./scripts/scrape.sh` to download the mailing list archives and populate a Postgres database. Note that `DATABASE_URL` should be set in the environment.
+- Use `pgsql-lists-offline` to download the mailing list archives to a local `data` directory. Note the dependencies on `parallel` and `curl`. See more below.
+- Use `yarn scrape` to process the archives and populate a Postgres database. Note that `DATABASE_URL` should be set in the environment.
 
 ## Create migration
 
@@ -29,8 +30,8 @@ Source: <https://github.com/wsdookadr/pgsql-lists-offline>
 
 Downloads mailing list archives for PostgreSQL, PostGIS and pgRouting.
 
-The mailing list archives that will be downloaded are in the [[https://en.wikipedia.org/wiki/Mbox][mbox format]] and can be read
-using any mbox-aware email client (for example [[http://www.mutt.org/][mutt]] ).
+The mailing list archives that will be downloaded are in the [mbox format](https://en.wikipedia.org/wiki/Mbox) and can be read
+using any mbox-aware email client (for example [mutt](http://www.mutt.org/) ).
 
 ### Dependencies
 
