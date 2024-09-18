@@ -296,24 +296,25 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: threads; Type: VIEW; Schema: public; Owner: -
+-- Name: threads; Type: MATERIALIZED VIEW; Schema: public; Owner: -
 --
 
-CREATE VIEW public.threads AS
- WITH RECURSIVE threads(thread_id, message_id) AS (
-         SELECT messages.id,
-            messages.id
+CREATE MATERIALIZED VIEW public.threads AS
+ WITH RECURSIVE thread_cte AS (
+         SELECT messages.id AS thread_id,
+            messages.id AS message_id
            FROM public.messages
           WHERE (messages.in_reply_to IS NULL)
         UNION ALL
          SELECT t.thread_id,
             m.id
            FROM (public.messages m
-             JOIN threads t ON ((m.in_reply_to = t.message_id)))
+             JOIN thread_cte t ON ((m.in_reply_to = t.message_id)))
         )
- SELECT threads.thread_id,
-    threads.message_id
-   FROM threads;
+ SELECT thread_cte.thread_id,
+    thread_cte.message_id
+   FROM thread_cte
+  WITH NO DATA;
 
 
 --
@@ -427,6 +428,13 @@ CREATE INDEX idx_messages_ts ON public.messages USING btree (ts);
 
 
 --
+-- Name: idx_threads_thread_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_threads_thread_id ON public.threads USING btree (thread_id);
+
+
+--
 -- Name: docs_chunks docs_chunks_doc_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -503,4 +511,5 @@ CREATE EVENT TRIGGER trigger_on_create_index_start ON ddl_command_start
 INSERT INTO public.schema_migrations (version) VALUES
     ('20231207224009'),
     ('20231212004442'),
-    ('20240918045129');
+    ('20240918045129'),
+    ('20240918055139');
