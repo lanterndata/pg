@@ -38,7 +38,7 @@ const PageClient = ({
   const [searchValue, setSearchValue] = useState('');
   const [orderBy, setOrderBy] = useState<'relevance' | 'latest'>('relevance');
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  const shouldPerformSearch = debouncedSearchValue.length > 2;
+  const shouldPerformSearch = debouncedSearchValue.length > 1;
 
   // Fetch threads on load
   useEffect(() => {
@@ -85,14 +85,15 @@ const PageClient = ({
       <main className='h-screen w-full white grid grid-cols-4'>
         <div className='bg-slate-900 px-2 pt-2 pb-4 flex flex-col gap-y-2 overflow-y-scroll'>
           <p className='text-stone-50 mt-5 mb-3'>
-            {shouldPerformSearch
-              ? 'Query: ' + searchValue
-              : list
-              ? '# ' + list
-              : 'All mailing lists'}
+            {list ? '# ' + list : 'All mailing lists'}
           </p>
-          {searchValue && (
-            <div className='grid grid-cols-2 gap-x-2 mb-2 text-stone-400'>
+          {shouldPerformSearch && (
+            <p className='text-stone-500'>
+              Searching for &quot;{searchValue}&quot;
+            </p>
+          )}
+          {shouldPerformSearch && (
+            <div className='grid grid-cols-2 gap-x-2 text-stone-400'>
               <OrderBy
                 value='relevance'
                 orderBy={orderBy}
