@@ -5,10 +5,23 @@ get_current_month() {
   date +%Y%m
 }
 
+# Function to get the last month in YYYYMM format
+get_last_month() {
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # For macOS
+    date -v-1m +%Y%m
+  else
+    # For Linux
+    date -d "-1 month" +%Y%m
+  fi
+}
+
 # Determine if --current-month flag is passed
 month=""
 if [ "$1" == "--current-month" ]; then
   month=$(get_current_month)
+elif [ "$1" == "--last-month" ]; then
+  month=$(get_last_month)
 fi
 
 # List of groups

@@ -1,8 +1,8 @@
-name: Scrape Last Month
+name: Scrape Daily
 
 on:
   schedule:
-    - cron: '0 1 1 * *'
+    - cron: '0 1 * * *'
 
 jobs:
   monthly_job:
@@ -11,7 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run scrape last month script
-        run: ./scripts/scrape.sh --last-month
+      - name: Run scrape current month script
+        run: ./scripts/scrape.sh --current-month
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
