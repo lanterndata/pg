@@ -123,16 +123,25 @@ const PageClient = ({
           )}
 
           {!shouldPerformSearch && (threads.length === 20 || page > 0) && (
-            <div className='flex justify-between mt-4 mx-2 text-stone-500 font-medium'>
+            <div className='flex justify-between items-center mt-4 mx-2 text-stone-500 font-medium'>
               <button
                 onClick={() => setPage((p) => p - 1)}
                 disabled={page === 0}
+                className={
+                  'text-sm ' +
+                  (page === 0 ? 'text-stone-500' : 'text-stone-300')
+                }
               >
                 {'<'} Prev
               </button>
+              <p className='text-stone-300'>Page {page + 1}</p>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={threads.length < 20}
+                className={
+                  'text-sm ' +
+                  (threads.length < 20 ? 'text-stone-500' : 'text-stone-300')
+                }
               >
                 Next {'>'}
               </button>
