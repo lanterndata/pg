@@ -1,5 +1,7 @@
 # PG Mailing List
 
+This project provides scripts for retrieving Postgres mailing list archives, populating a Postgres database with them, and rendering the archives with NextJS.
+
 ## Getting started
 
 - Run `git clone --recurse-submodules lanterndata/pg`
