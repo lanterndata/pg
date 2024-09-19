@@ -9,21 +9,26 @@ interface NavbarProps {
   activeList: undefined | string;
   searchValue: string;
   setSearchValue: (value: string) => void;
-  hasQuery: boolean;
+  className?: string;
 }
 
 const Navbar = ({
   activeList,
   searchValue,
   setSearchValue,
-  hasQuery,
+  className,
 }: NavbarProps) => (
-  <nav className='h-screen w-80 bg-slate-950 text-stone-300 py-8 overflow-y-scroll flex flex-col'>
+  <nav
+    className={classNames(
+      'h-screen bg-slate-950 text-stone-300 py-8 overflow-y-scroll flex flex-col',
+      className
+    )}
+  >
     <div className='px-5'>
       <Link href='/'>
         <p className='font-semibold text-sm'>PG.LANTERN.DEV</p>
       </Link>
-      <p className='font-medium mt-2 mb-8 text-2xl'>Mailing Lists</p>
+      <p className='font-medium mt-2 text-2xl'>Mailing Lists</p>
 
       <SearchInput value={searchValue} setValue={setSearchValue} />
     </div>
@@ -52,7 +57,7 @@ const Navbar = ({
 
     <div className='mt-auto'>
       <Link href='https://github.com/lanterndata/pg' target='_blank'>
-        <div className='flex items-center py-1 px-5 hover:bg-slate-900 gap-x-2 hover:cursor-pointer'>
+        <div className='flex items-center py-1 px-5 hover:bg-slate-900 gap-x-2 hover:cursor-pointer mt-8'>
           <FiGithub className='w-4 h-4' />
           <p>Star us on Github</p>
           <FiArrowUpRight className='w-4 h-4' />

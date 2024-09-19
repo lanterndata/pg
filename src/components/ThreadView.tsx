@@ -10,12 +10,14 @@ interface ThreadViewProps {
   loading?: boolean;
   threadId?: string;
   getThreadMessages: (threadId: string) => Promise<Message[]>;
+  back?: () => void;
 }
 
 const ThreadView = ({
   loading: threadsLoading,
   threadId,
   getThreadMessages,
+  back,
 }: ThreadViewProps) => {
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,6 +53,11 @@ const ThreadView = ({
   return (
     <div className='px-12 pt-8 pb-8'>
       <div className='mb-8'>
+        {back && (
+          <p className='text-slate-600 mb-2' onClick={back}>
+            {'< '}Back to all threads
+          </p>
+        )}
         <h1 className='text-2xl font-medium'>{message.subject}</h1>
         <div className='mt-2 w-full h-0.5 bg-slate-300' />
       </div>
