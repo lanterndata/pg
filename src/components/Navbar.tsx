@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import Link from 'next/link';
 import SearchInput from './SearchInput';
 import SettingsButton from './SettingsButton';
+import { FiGithub, FiArrowUpRight } from 'react-icons/fi';
 
 interface NavbarProps {
   activeList: undefined | string;
@@ -49,7 +50,16 @@ const Navbar = ({
       </div>
     ))}
 
-    <SettingsButton hasQuery={hasQuery} />
+    <div className='mt-auto'>
+      <Link href='https://github.com/lanterndata/pg' target='_blank'>
+        <div className='flex items-center py-1 px-5 hover:bg-slate-900 gap-x-2 hover:cursor-pointer'>
+          <FiGithub className='w-4 h-4' />
+          <p>Star us on Github</p>
+          <FiArrowUpRight className='w-4 h-4' />
+        </div>
+      </Link>
+      <SettingsButton />
+    </div>
   </nav>
 );
 

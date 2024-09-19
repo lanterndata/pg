@@ -30,11 +30,7 @@ const ListItem = ({ id, name, checked, onChange }: ListItemProps) => (
   </li>
 );
 
-interface SettingsButtonProps {
-  hasQuery: boolean;
-}
-
-const SettingsButton = ({ hasQuery }: SettingsButtonProps) => {
+const SettingsButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [sortBy, setSortBy] = useAtom(sortByAtom);
   return (
@@ -63,15 +59,12 @@ const SettingsButton = ({ hasQuery }: SettingsButtonProps) => {
         </ul>
       </Modal>
       <div
-        className='py-1 px-5 hover:bg-slate-900 flex items-center gap-x-2 mt-auto hover:cursor-pointer'
+        className='py-1 px-5 hover:bg-slate-900 flex items-center gap-x-2 hover:cursor-pointer'
         onClick={() => setIsOpen(true)}
       >
         <FiSettings className='w-4 h-4' />
         <p>Settings</p>
       </div>
-      <p className='text-xs px-5'>
-        Sorted by {hasQuery ? sortBy : 'latest (no query)'}
-      </p>
     </>
   );
 };
