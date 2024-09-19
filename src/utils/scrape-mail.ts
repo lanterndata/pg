@@ -204,7 +204,7 @@ async function fetchMessages() {
 }
 
 async function updateMaterializedView() {
-  await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY messages;`.execute(db);
+  await sql`REFRESH MATERIALIZED VIEW CONCURRENTLY threads;`.execute(db);
 }
 
 async function main() {
