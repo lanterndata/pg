@@ -96,7 +96,7 @@ const MessageView = ({ message, messages, layer }: MessageViewProps) => {
         )}
       </div>
 
-      {replies.length > 0 && (
+      {!collapsed && replies.length > 0 && (
         <div className='flex items-stretch pt-8'>
           <div className='w-0.5 mr-8 bg-slate-300' />
           <div className='w-full flex flex-col gap-y-8'>
