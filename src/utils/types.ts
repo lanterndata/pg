@@ -1,3 +1,5 @@
+export type FontType = 'source-sans-3' | 'ibm-plex-mono';
+
 export type SortByType = 'default' | 'vector search' | 'Postgres FTS';
 
 export interface Thread {

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FiSettings } from 'react-icons/fi';
 import Modal from './Modal';
 import { useAtom } from 'jotai';
-import { sortByAtom } from '@/utils/atoms';
+import { fontAtom, sortByAtom } from '@/utils/atoms';
 
 interface ListItemProps {
   id: string;
@@ -33,11 +33,12 @@ const ListItem = ({ id, name, checked, onChange }: ListItemProps) => (
 const SettingsButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [sortBy, setSortBy] = useAtom(sortByAtom);
+  const [font, setFont] = useAtom(fontAtom);
   return (
     <>
       <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title='Settings'>
         <p className='font-medium mb-1'>Sort by algorithm</p>
-        <ul>
+        <ul className='flex gap-x-8'>
           <ListItem
             id='default'
             name='Default'
@@ -55,6 +56,22 @@ const SettingsButton = () => {
             name='Text'
             checked={sortBy === 'Postgres FTS'}
             onChange={() => setSortBy('Postgres FTS')}
+          />
+        </ul>
+
+        <p className='font-medium mt-4 mb-1'>Font</p>
+        <ul className='flex gap-x-9'>
+          <ListItem
+            id='source-sans-3'
+            name='Source Sans 3'
+            checked={font === 'source-sans-3'}
+            onChange={() => setFont('source-sans-3')}
+          />
+          <ListItem
+            id='ibm-plex-mono'
+            name='IBM Plex Mono'
+            checked={font === 'ibm-plex-mono'}
+            onChange={() => setFont('ibm-plex-mono')}
           />
         </ul>
       </Modal>
