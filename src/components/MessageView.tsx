@@ -58,7 +58,7 @@ const MessageView = ({ message, messages, layer }: MessageViewProps) => {
   const [collapsed, setCollapsed] = useState(layer > 3);
   const replies = messages.filter((m) => m.inReplyTo === message.id);
   return (
-    <div className='text-sm'>
+    <>
       <div className='rounded border border-slate-300 shadow drop-shadow w-full'>
         <div className='flex text-sm bg-slate-300 px-4 py-2'>
           <p className='mr-auto'>{message.fromName}</p>
@@ -111,7 +111,7 @@ const MessageView = ({ message, messages, layer }: MessageViewProps) => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

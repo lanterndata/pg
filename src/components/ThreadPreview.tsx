@@ -47,19 +47,23 @@ const ThreadPreview = ({
           {list ? '#' + list : ''}
         </div>
       )}
-      <div
-        className={classNames(
-          'flex text-xs',
-          font === 'ibm-plex-mono' ? 'mb-1.5' : 'mb-1'
-        )}
-      >
+      <div className='flex text-xs mb-1.5'>
         <p>{thread.fromName || thread.fromAddress}</p>
         {thread.count > 1 && (
           <p className='ml-2 text-stone-400'>{thread.count}</p>
         )}
         <p className='ml-auto'>{formatDateAsYYYYMMDD(thread.ts)}</p>
       </div>
-      <p className='font-medium text-sm'>{thread.subject}</p>
+      <p
+        className={classNames(
+          'text-sm',
+          isActive
+            ? 'text-white font-medium'
+            : 'hover:text-stone-200 text-stone-300'
+        )}
+      >
+        {thread.subject}
+      </p>
       {thread.preview && (
         <p
           className={classNames(

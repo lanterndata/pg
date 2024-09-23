@@ -51,7 +51,7 @@ const ThreadView = ({
   const href = `https://www.postgresql.org/message-id/${threadId}`;
 
   return (
-    <div className='px-12 pt-8 pb-8'>
+    <div className='px-12 pt-8 pb-8 max-w-5xl w-full mx-auto'>
       <div className='mb-8'>
         {back && (
           <p className='text-slate-600 mb-2' onClick={back}>
@@ -62,7 +62,10 @@ const ThreadView = ({
         <div className='mt-2 w-full h-0.5 bg-slate-300' />
       </div>
 
-      <MessageView message={message} messages={messages} layer={0} />
+      <div className='text-sm'>
+        <MessageView message={message} messages={messages} layer={0} />
+      </div>
+
       <div className='mt-12 text-sm font-medium'>
         Source:{' '}
         <Link href={href} className='text-slate-500'>
