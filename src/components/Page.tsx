@@ -1,11 +1,5 @@
 'use client';
-import {
-  Fira_Mono,
-  IBM_Plex_Mono,
-  IBM_Plex_Sans,
-  JetBrains_Mono,
-  Source_Sans_3,
-} from 'next/font/google';
+import { IBM_Plex_Mono, Source_Sans_3 } from 'next/font/google';
 import PageClient from './PageClient';
 import {
   getThreadMessages,
