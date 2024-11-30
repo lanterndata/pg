@@ -41,19 +41,19 @@ const SettingsButton = () => {
         <ul className='flex gap-x-8'>
           <ListItem
             id='default'
-            name='Default'
+            name='sort-algorithm'
             checked={sortBy === 'default'}
             onChange={() => setSortBy('default')}
           />
           <ListItem
             id='vector'
-            name='Vector'
+            name='sort-algorithm'
             checked={sortBy === 'vector search'}
             onChange={() => setSortBy('vector search')}
           />
           <ListItem
             id='text'
-            name='Text'
+            name='sort-algorithm'
             checked={sortBy === 'Postgres FTS'}
             onChange={() => setSortBy('Postgres FTS')}
           />
@@ -63,13 +63,13 @@ const SettingsButton = () => {
         <ul className='flex gap-x-9'>
           <ListItem
             id='source-sans-3'
-            name='Source Sans 3'
+            name='font-selection'
             checked={font === 'source-sans-3'}
             onChange={() => setFont('source-sans-3')}
           />
           <ListItem
             id='ibm-plex-mono'
-            name='IBM Plex Mono'
+            name='font-selection'
             checked={font === 'ibm-plex-mono'}
             onChange={() => setFont('ibm-plex-mono')}
           />
