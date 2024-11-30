@@ -9,17 +9,24 @@ import { fontAtom, sortByAtom } from '@/utils/atoms';
 interface ListItemProps {
   id: string;
   name: string;
+  groupName: string;
   checked: boolean;
   onChange: () => void;
 }
 
-const ListItem = ({ id, name, checked, onChange }: ListItemProps) => (
+const ListItem = ({
+  id,
+  name,
+  groupName,
+  checked,
+  onChange,
+}: ListItemProps) => (
   <li>
     <input
       className='cursor-pointer'
       type='radio'
       id={id}
-      name='sort'
+      name={groupName} // Dynamically set the name for grouping
       value={id}
       checked={checked}
       onChange={onChange}
@@ -41,19 +48,22 @@ const SettingsButton = () => {
         <ul className='flex gap-x-8'>
           <ListItem
             id='default'
-            name='sort-algorithm'
+            name='Default'
+            groupName='sort-algorithm'
             checked={sortBy === 'default'}
             onChange={() => setSortBy('default')}
           />
           <ListItem
             id='vector'
-            name='sort-algorithm'
+            name='Vector'
+            groupName='sort-algorithm'
             checked={sortBy === 'vector search'}
             onChange={() => setSortBy('vector search')}
           />
           <ListItem
             id='text'
-            name='sort-algorithm'
+            name='Text'
+            groupName='sort-algorithm'
             checked={sortBy === 'Postgres FTS'}
             onChange={() => setSortBy('Postgres FTS')}
           />
@@ -63,13 +73,15 @@ const SettingsButton = () => {
         <ul className='flex gap-x-9'>
           <ListItem
             id='source-sans-3'
-            name='font-selection'
+            name='Source Sans 3'
+            groupName='font-selection'
             checked={font === 'source-sans-3'}
             onChange={() => setFont('source-sans-3')}
           />
           <ListItem
             id='ibm-plex-mono'
-            name='font-selection'
+            name='IBM Plex Mono'
+            groupName='font-selection'
             checked={font === 'ibm-plex-mono'}
             onChange={() => setFont('ibm-plex-mono')}
           />
